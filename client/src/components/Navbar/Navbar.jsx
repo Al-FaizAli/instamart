@@ -1,14 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Navbar.css";
-import { FaShoppingCart, FaSearch } from "react-icons/fa";
+import { FaShoppingCart, FaSearch, FaBars, FaTimes } from "react-icons/fa";
 import Login from "../Login/Login";
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
     return (
         <nav className="navbar">
-            <div className="logo">
+            <div className="logo" onClick={() => navigate('/')}>
                 <span className="blink">insta</span>
                 <span className="it">cart</span>
             </div>
@@ -27,6 +30,21 @@ const Navbar = () => {
                     My Cart
                 </button>
             </div>
+
+            <div className="hamburger-menu" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                {isMenuOpen ? <FaTimes /> : <FaBars />}
+            </div>
+
+            {isMenuOpen && (
+                <div className="mobile-menu">
+                    <button className="login-btn" onClick={() => setIsLoginOpen(true)}>Login</button>
+                    <button className="cart-btn">
+                        <FaShoppingCart />
+                        My Cart
+                    </button>
+                </div>
+            )}
+
             {isLoginOpen && <Login onClose={() => setIsLoginOpen(false)} />}
         </nav>
     );

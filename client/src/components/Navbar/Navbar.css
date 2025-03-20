@@ -10,10 +10,9 @@
     left: 0;
     z-index: 1000;
     width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
     box-sizing: border-box;
 }
+
 .logo {
     font-size: 34px;
     font-weight: bolder;
@@ -29,7 +28,7 @@
 }
 
 .delivery-info {
-    font-size: 24px;
+    font-size: 18px;
 }
 
 .location {
@@ -70,19 +69,21 @@
 .login-btn {
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 16px;
     cursor: pointer;
-    margin-right: 20px;
+    margin-right: 10px;
     color: grey;
     background-color: rgb(217, 217, 230);
     padding: 8px 12px;
     border-radius: 5px;
 }
+
 .login-btn:hover {
     background-color: rgb(202, 202, 222);
 }
+
 .cart-btn {
-    font-size: 20px;
+    font-size: 16px;
     background: #008000;
     color: white;
     border: none;
@@ -92,4 +93,91 @@
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+.hamburger-menu {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.mobile-menu {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.mobile-menu .login-btn,
+.mobile-menu .cart-btn {
+    width: 100%;
+    text-align: center;
+}
+
+@media (max-width: 1024px) {
+    .search-bar {
+        width: 350px;  
+    }
+    
+    .delivery-info {
+        font-size: 16px;
+        text-align: center;
+    }
+    
+    .location {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .nav-buttons {
+        gap: 5px; 
+    }
+    
+    .login-btn {
+        padding: 6px 10px; 
+        font-size: 14px;
+    }
+    
+    .cart-btn {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 992px) {
+    .search-bar {
+        width: 280px;
+    }
+    
+    .delivery-info {
+        font-size: 14px;
+        text-align: left;
+    }
+    
+    .login-btn {
+        font-size: 17px;
+        padding: 5px 8px;
+    }
+    
+    .cart-btn {
+        font-size: 17px;
+        padding: 5px 10px;
+    }
+}
+@media (max-width: 768px) {
+    .delivery-info, .search-bar, .nav-buttons {
+        display: none;
+    }
+
+    .hamburger-menu {
+        display: block;
+    }
 }

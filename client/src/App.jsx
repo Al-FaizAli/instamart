@@ -2,8 +2,8 @@ import React from 'react'
 import './App.css'
 import Navbar from "./components/Navbar/Navbar"
 import Home from './pages/Home/Home'
-import CategoryCards from './apitest'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import ProductsPage from './pages/Products/Products'
 const App = () => {
   return (
     <Router>
@@ -11,8 +11,9 @@ const App = () => {
         <Navbar />
         <Routes>
           <Route path='/' element={<Home />} />
+          <Route path='/department/:department' element={<ProductsPage />} />
         </Routes>
-        <CategoryCards />
+        {/* <CategoryCards /> */}
       </div>
     </Router>
   )

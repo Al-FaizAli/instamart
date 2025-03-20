@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./Departments.css";
 import paan from "../../assets/paan.avif";
 import dairy from "../../assets/dairy.avif";
@@ -22,33 +23,43 @@ import personal from "../../assets/personal.avif";
 import petcare from "../../assets/petcare.avif";
 
 const departments = [
-  { image: paan },
-  { image: dairy },
-  { image: fruits },
-  { image: drinks },
-  { image: snacks },
-  { image: breakfast },
-  { image: sweets },
-  { image: bakery },
-  { image: tea },
-  { image: atta },
-  { image: masala },
-  { image: sauces },
-  { image: meat },
-  { image: organic },
-  { image: babycare },
-  { image: pharma },
-  { image: cleaning },
-  { image: home },
-  { image: personal },
-  { image: petcare },
+  { name: "Paan Corner", image: paan },
+  { name: "Dairy, Bread & Eggs", image: dairy },
+  { name: "Fruits & Vegetables", image: fruits },
+  { name: "Cold Drinks & Juices", image: drinks },
+  { name: "Snacks & Munchies", image: snacks },
+  { name: "Breakfast & Instant Food", image: breakfast },
+  { name: "Sweet Tooth", image: sweets },
+  { name: "Bakery & Biscuits", image: bakery },
+  { name: "Tea, Coffee & Health Drink", image: tea },
+  { name: "Atta, Rice & Dal", image: atta },
+  { name: "Masala, Oil & More", image: masala },
+  { name: "Sauces & Spreads", image: sauces },
+  { name: "Chicken, Meat & Fish", image: meat },
+  { name: "Organic & Healthy Living", image: organic },
+  { name: "Baby Care", image: babycare },
+  { name: "Pharma & Wellness", image: pharma },
+  { name: "Cleaning Essentials", image: cleaning },
+  { name: "Home & Office", image: home },
+  { name: "Personal Care", image: personal },
+  { name: "Pet Care", image: petcare },
 ];
 
 const Departments = () => {
   return (
     <div className="departments-container">
       {departments.map((dept, index) => (
-        <img key={index} src={dept.image} alt={`Department ${index + 1}`} className="department-image" />
+        <Link
+          key={index}
+          to={`/department/${dept.name}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <img
+            src={dept.image}
+            alt={dept.name}
+            className="department-image"
+          />
+        </Link>
       ))}
     </div>
   );
