@@ -1,0 +1,78 @@
+.recommendation-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s;
+    background: white;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.recommendation-card .product-info {
+    padding: 1rem;
+}
+
+.recommendation-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1rem;
+}
+
+.recommendation-card p {
+    margin: 0 0 0.5rem 0;
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.recommendation-card .rating {
+    color: #ffc107;
+    margin-bottom: 0.5rem;
+}
+
+.recommendation-card .add-to-cart {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.recommendation-card.our {
+    border-top: 3px solid #ff9800;
+}
+
+.recommendation-card.past {
+    border-top: 3px solid #2196f3;
+}
+
+.recommendation-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.product-category {
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0.3rem 0;
+    text-transform: capitalize;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #666;
+}

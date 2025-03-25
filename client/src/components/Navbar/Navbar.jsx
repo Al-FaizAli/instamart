@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./Navbar.css";
 import { FaShoppingCart, FaSearch, FaBars, FaTimes } from "react-icons/fa";
-import Login from "../Login/Login";
+import Login from "../LoginSignup/LoginSignup";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {

@@ -7,16 +7,19 @@ const ProductsPage = () => {
     const { department } = useParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [cart, setCart] = useState([]);
 
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
-    const generateProductDetails = (product) => {
+    const generateProductDetails = (product, index) => {
         const prices = [74, 80, 16, 25, 28];
         const quantities = ['1 ltr', '200 ml', '250 ml', '450 ml'];
         const ratings = [4.0, 4.5, 3.5, 5.0];
 
         return {
             ...product,
+            id: `prod_${department}_${index}`,
+            name: product.alt_description || `Product ${index + 1}`,
             price: prices[Math.floor(Math.random() * prices.length)],
             quantity: quantities[Math.floor(Math.random() * quantities.length)],
             rating: ratings[Math.floor(Math.random() * ratings.length)],
@@ -31,8 +34,8 @@ const ProductsPage = () => {
             );
 
             if (response.data.results.length > 0) {
-                const productsWithDetails = response.data.results.map((product) =>
-                    generateProductDetails(product)
+                const productsWithDetails = response.data.results.map((product, index) =>
+                    generateProductDetails(product, index)
                 );
                 setProducts(productsWithDetails);
             } else {
@@ -46,16 +49,86 @@ const ProductsPage = () => {
         }
     };
 
-    useEffect(() => {
-        fetchProducts();
-    }, [department]);
-
-    const handleAdd = (productId) => {
-        console.log(`Added product with ID: ${productId}`);
+    const fetchCart = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            const response = await axios.get('http://localhost:5000/api/cart', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setCart(response.data.cart?.items || []);
+        } catch (error) {
+            console.error('Error fetching cart:', error);
+        }
     };
 
-    const handleRemove = (productId) => {
-        console.log(`Removed product with ID: ${productId}`);
+    useEffect(() => {
+        fetchProducts();
+        fetchCart();
+    }, [department]);
+
+    const handleAdd = async (productId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login to add items to cart');
+                return;
+            }
+
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            await axios.post('http://localhost:5000/api/cart/add', 
+                {
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price,
+                    image: product.urls.regular,
+                    quantity: 1
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            
+            await fetchCart();
+            alert(`${product.name} added to cart!`);
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            alert(error.response?.data?.error || 'Failed to add to cart');
+        }
+    };
+
+    const handleRemove = async (productId) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login to modify cart');
+                return;
+            }
+
+            await axios.delete(`http://localhost:5000/api/cart/remove/${productId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            await fetchCart();
+            alert('Item removed from cart');
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            alert(error.response?.data?.error || 'Failed to remove from cart');
+        }
+    };
+
+    const isInCart = (productId) => {
+        return cart.some(item => item.product.id === productId);
     };
 
     return (
@@ -66,29 +139,31 @@ const ProductsPage = () => {
             ) : (
                 <div className="products-container">
                     {products.map((product, index) => (
-                        <div key={index} className="product-card">
+                        <div key={product.id} className="product-card">
                             <img
                                 src={product.urls.regular}
                                 alt={product.alt_description}
                                 className="product-image"
                             />
-                            <h3 className="product-name">{product.alt_description || 'No description'}</h3>
-                            {/* <p className="product-quantity">{product.quantity}</p> */}
+                            <h3 className="product-name">{product.name}</h3>
                             <p className="product-price">${product.price}</p>
                             <p className="product-rating">Rating: {product.rating} ★</p>
                             <div className="product-actions">
-                                <button
-                                    className="add-button"
-                                    onClick={() => handleAdd(product.id)}
-                                >
-                                    ADD
-                                </button>
-                                <button
-                                    className="remove-button"
-                                    onClick={() => handleRemove(product.id)}
-                                >
-                                    REMOVE
-                                </button>
+                                {isInCart(product.id) ? (
+                                    <button
+                                        className="remove-button"
+                                        onClick={() => handleRemove(product.id)}
+                                    >
+                                        REMOVE
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="add-button"
+                                        onClick={() => handleAdd(product.id)}
+                                    >
+                                        ADD
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
