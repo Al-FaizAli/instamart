@@ -1,64 +1,102 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import "./Departments.css";
-import paan from "../../assets/paan.avif";
-import dairy from "../../assets/dairy.avif";
-import fruits from "../../assets/fruits.avif";
-import drinks from "../../assets/drinks.avif";
-import snacks from "../../assets/snacks.avif";
-import breakfast from "../../assets/breakfast.avif";
-import sweets from "../../assets/sweets.avif";
-import bakery from "../../assets/bakery.avif";
-import tea from "../../assets/tea.avif";
-import atta from "../../assets/atta.avif";
-import masala from "../../assets/masala.avif";
-import sauces from "../../assets/sauces.avif";
-import meat from "../../assets/meat.avif";
-import organic from "../../assets/organic.avif";
-import babycare from "../../assets/babycare.avif";
-import pharma from "../../assets/pharma.avif";
-import cleaning from "../../assets/cleaning.avif";
-import home from "../../assets/home.avif";
-import personal from "../../assets/personal.avif";
-import petcare from "../../assets/petcare.avif";
+import { fetchDepartments } from "../../api";
 
-const departments = [
-  { name: "Paan Corner", image: paan },
-  { name: "Dairy & Eggs", image: dairy },
-  { name: "Fruits & Vegetables", image: fruits },
-  { name: "Cold Drinks & Juices", image: drinks },
-  { name: "Snacks & Munchies", image: snacks },
-  { name: "Breakfast & Instant Food", image: breakfast },
-  { name: "Sweets & Chocolates", image: sweets },
-  { name: "Bakery & Biscuits", image: bakery },
-  { name: "Tea, Coffee & Beverages", image: tea },
-  { name: "Atta, Rice & Pulses", image: atta },
-  { name: "Spices & Cooking Essentials", image: masala },
-  { name: "Sauces, Spreads & Dips", image: sauces },
-  { name: "Meat & Seafood", image: meat },
-  { name: "Organic & Health Foods", image: organic },
-  { name: "Diapers & Baby Essentials", image: babycare },
-  { name: "Pharmacy & Wellness", image: pharma },
-  { name: "Cleaning & Household", image: cleaning },
-  { name: "Home & Kitchen", image: home },
-  { name: "Personal Care & Hygiene", image: personal },
-  { name: "Pet Care", image: petcare },
-];
+// Unsplash API configuration
+const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+const UNSPLASH_API = "https://api.unsplash.com/search/photos";
 
 const Departments = () => {
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // 1. Fetch departments from MongoDB
+        const departmentsResponse = await fetchDepartments();
+
+        // 2. Fetch images from Unsplash for each department
+        const departmentsWithImages = await Promise.all(
+          departmentsResponse.data.map(async (dept) => {
+            try {
+              const response = await axios.get(
+                `${UNSPLASH_API}?query=${encodeURIComponent(dept.department)}&client_id=${ACCESS_KEY}&per_page=1`
+              );
+
+              return {
+                ...dept,
+                image: response.data.results[0]?.urls?.small ||
+                  `https://source.unsplash.com/random/300x200/?${encodeURIComponent(dept.department)},grocery`
+              };
+            } catch (unsplashError) {
+              console.error(`Error fetching image for ${dept.department}:`, unsplashError);
+              return {
+                ...dept,
+                image: `https://source.unsplash.com/random/300x200/?${encodeURIComponent(dept.department)},grocery`
+              };
+            }
+          })
+        );
+
+        setDepartments(departmentsWithImages);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleImageLoad = () => {
+    setImagesLoaded(prev => prev + 1);
+  };
+
+  if (loading) return (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <p>Loading departments...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="error-container">
+      <p>Error loading departments: {error}</p>
+      <button onClick={() => window.location.reload()}>Try Again</button>
+    </div>
+  );
+
   return (
     <div className="departments-container">
-      {departments.map((dept, index) => (
+      {departments.map((dept) => (
         <Link
-          key={index}
-          to={`/department/${dept.name}`}
-          style={{ textDecoration: "none", color: "inherit" }}
+          key={dept.department_id}
+          to={`/department/${dept.department_id}`}
+          className="department-link"
         >
-          <img
-            src={dept.image}
-            alt={dept.name}
-            className="department-image"
-          />
+          <div className="department-card">
+            <div className="image-container">
+              <img
+                src={dept.image}
+                alt={dept.department}
+                className="department-image"
+                loading="lazy"
+                onLoad={handleImageLoad}
+              />
+              {imagesLoaded < departments.length && (
+                <div className="image-placeholder"></div>
+              )}
+            </div>
+            <div className="department-info">
+              <h3 className="department-name">{dept.department}</h3>
+            </div>
+          </div>
         </Link>
       ))}
     </div>

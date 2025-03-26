@@ -4,45 +4,58 @@ import { useParams } from 'react-router-dom';
 import './Products.css';
 
 const ProductsPage = () => {
-    const { department } = useParams();
+    const { departmentId } = useParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState([]);
+    const [departmentName, setDepartmentName] = useState('');
 
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
-    const generateProductDetails = (product, index) => {
-        const prices = [74, 80, 16, 25, 28];
-        const quantities = ['1 ltr', '200 ml', '250 ml', '450 ml'];
-        const ratings = [4.0, 4.5, 3.5, 5.0];
-
-        return {
-            ...product,
-            id: `prod_${department}_${index}`,
-            name: product.alt_description || `Product ${index + 1}`,
-            price: prices[Math.floor(Math.random() * prices.length)],
-            quantity: quantities[Math.floor(Math.random() * quantities.length)],
-            rating: ratings[Math.floor(Math.random() * ratings.length)],
-        };
-    };
-
-    const fetchProducts = async () => {
+    const fetchDepartmentProducts = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(
-                `https://api.unsplash.com/search/photos?query=${department}&client_id=${ACCESS_KEY}&per_page=20`
+            // 1. Fetch products from MongoDB by department ID
+            const productsResponse = await axios.get(
+                `http://localhost:5000/api/products/department/${departmentId}`
             );
 
-            if (response.data.results.length > 0) {
-                const productsWithDetails = response.data.results.map((product, index) =>
-                    generateProductDetails(product, index)
-                );
-                setProducts(productsWithDetails);
-            } else {
-                setProducts([]);
-            }
+            // 2. Get department name
+            const departmentResponse = await axios.get(
+                `http://localhost:5000/api/departments/${departmentId}`
+            );
+
+            setDepartmentName(departmentResponse.data.department);
+
+            // 3. Limit to 30 products and fetch images from Unsplash
+            const limitedProducts = productsResponse.data.slice(0, 32);
+            const productsWithImages = await Promise.all(
+                limitedProducts.map(async (product) => {
+                    try {
+                        const unsplashResponse = await axios.get(
+                            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(product.product_name)}&client_id=${ACCESS_KEY}&per_page=1`
+                        );
+
+                        return {
+                            ...product,
+                            image: unsplashResponse.data.results[0]?.urls?.small ||
+                                `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
+                            rating: (Math.random() * 2 + 3).toFixed(1) // Random rating between 3.0 and 5.0
+                        };
+                    } catch (unsplashError) {
+                        console.error(`Error fetching image for ${product.product_name}:`, unsplashError);
+                        return {
+                            ...product,
+                            image: `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
+                            rating: (Math.random() * 2 + 3).toFixed(1)
+                        };
+                    }
+                })
+            );
+
+            setProducts(productsWithImages);
         } catch (error) {
-            console.error(`Error fetching products for ${department}:`, error);
+            console.error(`Error fetching products for department ${departmentId}:`, error);
             setProducts([]);
         } finally {
             setLoading(false);
@@ -53,7 +66,7 @@ const ProductsPage = () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
-            
+
             const response = await axios.get('http://localhost:5000/api/cart', {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -66,9 +79,9 @@ const ProductsPage = () => {
     };
 
     useEffect(() => {
-        fetchProducts();
+        fetchDepartmentProducts();
         fetchCart();
-    }, [department]);
+    }, [departmentId]);
 
     const handleAdd = async (productId) => {
         try {
@@ -78,15 +91,15 @@ const ProductsPage = () => {
                 return;
             }
 
-            const product = products.find(p => p.id === productId);
+            const product = products.find(p => p.product_id === productId);
             if (!product) return;
 
-            await axios.post('http://localhost:5000/api/cart/add', 
+            await axios.post('http://localhost:5000/api/cart/add',
                 {
-                    productId: product.id,
-                    name: product.name,
-                    price: product.price,
-                    image: product.urls.regular,
+                    productId: product.product_id,
+                    name: product.product_name,
+                    price: product.price || 10.99, // Default price if not available
+                    image: product.image,
                     quantity: 1
                 },
                 {
@@ -96,9 +109,9 @@ const ProductsPage = () => {
                     }
                 }
             );
-            
+
             await fetchCart();
-            alert(`${product.name} added to cart!`);
+            alert(`${product.product_name} added to cart!`);
         } catch (error) {
             console.error('Error adding to cart:', error);
             alert(error.response?.data?.error || 'Failed to add to cart');
@@ -118,7 +131,7 @@ const ProductsPage = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
+
             await fetchCart();
             alert('Item removed from cart');
         } catch (error) {
@@ -128,45 +141,55 @@ const ProductsPage = () => {
     };
 
     const isInCart = (productId) => {
-        return cart.some(item => item.product.id === productId);
+        return cart.some(item => item.product.productId === productId);
     };
 
     return (
         <div className="products-page">
-            <h1>{department}</h1>
+            <h1>{departmentName || 'Products'}</h1>
             {loading ? (
-                <p className="loading-message">Loading products...</p>
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading products...</p>
+                </div>
             ) : (
                 <div className="products-container">
-                    {products.map((product, index) => (
-                        <div key={product.id} className="product-card">
-                            <img
-                                src={product.urls.regular}
-                                alt={product.alt_description}
-                                className="product-image"
-                            />
-                            <h3 className="product-name">{product.name}</h3>
-                            <p className="product-price">${product.price}</p>
-                            <p className="product-rating">Rating: {product.rating} ★</p>
-                            <div className="product-actions">
-                                {isInCart(product.id) ? (
-                                    <button
-                                        className="remove-button"
-                                        onClick={() => handleRemove(product.id)}
-                                    >
-                                        REMOVE
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="add-button"
-                                        onClick={() => handleAdd(product.id)}
-                                    >
-                                        ADD
-                                    </button>
-                                )}
+                    {products.length > 0 ? (
+                        products.map((product) => (
+                            <div key={product.product_id} className="product-card">
+                                <div className="image-container">
+                                    <img
+                                        src={product.image}
+                                        alt={product.product_name}
+                                        className="product-image"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <h3 className="product-name">{product.product_name}</h3>
+                                <p className="product-price">${product.price || '10'}</p>
+                                <p className="product-rating">Rating: {product.rating} ★</p>
+                                <div className="product-actions">
+                                    {isInCart(product.product_id) ? (
+                                        <button
+                                            className="remove-button"
+                                            onClick={() => handleRemove(product.product_id)}
+                                        >
+                                            REMOVE
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="add-button"
+                                            onClick={() => handleAdd(product.product_id)}
+                                        >
+                                            ADD
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="no-products">No products found in this department</p>
+                    )}
                 </div>
             )}
         </div>

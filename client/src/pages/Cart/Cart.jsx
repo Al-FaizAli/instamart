@@ -20,7 +20,7 @@ const MyCart = () => {
 
             const response = await axios.get('http://localhost:5000/api/cart', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    // 'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -42,7 +42,7 @@ const MyCart = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            await fetchCart(); 
+            await fetchCart();
         } catch (error) {
             console.error('Error removing item:', error);
             setError(error.response?.data?.error || 'Failed to remove item');
@@ -99,7 +99,7 @@ const MyCart = () => {
                     <p>Your cart is empty</p>
                     <button
                         className="continue-shopping-btn"
-                        onClick={() => navigate('/products')}
+                        onClick={() => navigate('/')}
                     >
                         Continue Shopping
                     </button>
