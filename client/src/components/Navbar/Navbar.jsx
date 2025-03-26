@@ -25,7 +25,7 @@ const Navbar = () => {
             </div>
             <div className="nav-buttons">
                 <button className="login-btn" onClick={() => setIsLoginOpen(true)}>Login</button>
-                <button className="cart-btn">
+                <button className="cart-btn" onClick={() => navigate('/cart')}>
                     <FaShoppingCart />
                     My Cart
                 </button>
@@ -38,7 +38,7 @@ const Navbar = () => {
             {isMenuOpen && (
                 <div className="mobile-menu">
                     <button className="login-btn" onClick={() => setIsLoginOpen(true)}>Login</button>
-                    <button className="cart-btn">
+                    <button className="cart-btn" onClick={() => navigate('/cart')}>
                         <FaShoppingCart />
                         My Cart
                     </button>
