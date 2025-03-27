@@ -3,6 +3,7 @@ import "./Navbar.css";
 import { FaShoppingCart, FaSearch, FaBars, FaTimes } from "react-icons/fa";
 import Login from "../LoginSignup/LoginSignup";
 import { useNavigate } from "react-router-dom";
+import SearchBar from "../SearchBar/SearchBar";
 
 const Navbar = () => {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -20,8 +21,9 @@ const Navbar = () => {
                 <span className="location">45, College Rd, Indian Institute o...</span>
             </div>
             <div className="search-bar">
-                <FaSearch className="search-icon" />
-                <input type="text" placeholder="Search 'egg'" />
+                {/* <FaSearch className="search-icon" />
+                <input type="text" placeholder="Search 'egg'" /> */}
+                <SearchBar />
             </div>
             <div className="nav-buttons">
                 <button className="login-btn" onClick={() => setIsLoginOpen(true)}>Login</button>

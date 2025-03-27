@@ -1,33 +1,31 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
-import API from '../../api';
+import './SearchResults.css';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 
-const ProductsPage = () => {
-    const { departmentId } = useParams();
+const SearchResults = () => {
     const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [cart, setCart] = useState([]);
-    const [departmentName, setDepartmentName] = useState('');
-
+    const location = useLocation();
+    const navigate = useNavigate();
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
-    const fetchDepartmentProducts = async () => {
+    const searchQuery = new URLSearchParams(location.search).get('q');
+
+    const fetchSearchResults = async () => {
         setLoading(true);
         try {
-            const productsResponse = await API.get(
-                `/api/products/department/${departmentId}`
+            // 1. First fetch products from your backend
+            const response = await axios.get(
+                `http://localhost:5000/api/products/search?q=${searchQuery}`
             );
-            const departmentResponse = await API.get(
-                `/api/departments/${departmentId}`
-            );
-
-            setDepartmentName(departmentResponse.data.department);
-
-            const limitedProducts = productsResponse.data.slice(0, 32);
+            
+            // 2. Enhance products with Unsplash images
             const productsWithImages = await Promise.all(
-                limitedProducts.map(async (product) => {
+                response.data.map(async (product) => {
                     try {
                         const unsplashResponse = await axios.get(
                             `https://api.unsplash.com/search/photos?query=${encodeURIComponent(product.product_name)}&client_id=${ACCESS_KEY}&per_page=1`
@@ -37,7 +35,7 @@ const ProductsPage = () => {
                             ...product,
                             image: unsplashResponse.data.results[0]?.urls?.small ||
                                 `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
-                            rating: (Math.random() * 2 + 3).toFixed(1)
+                            rating: (Math.random() * 2 + 3).toFixed(1) // Random rating between 3.0-5.0
                         };
                     } catch (unsplashError) {
                         console.error(`Error fetching image for ${product.product_name}:`, unsplashError);
@@ -51,9 +49,10 @@ const ProductsPage = () => {
             );
 
             setProducts(productsWithImages);
-        } catch (error) {
-            console.error(`Error fetching products for department ${departmentId}:`, error);
-            setProducts([]);
+            setError('');
+        } catch (err) {
+            setError('Failed to fetch search results');
+            console.error('Search error:', err);
         } finally {
             setLoading(false);
         }
@@ -76,9 +75,13 @@ const ProductsPage = () => {
     };
 
     useEffect(() => {
-        fetchDepartmentProducts();
-        fetchCart();
-    }, [departmentId]);
+        if (searchQuery) {
+            fetchSearchResults();
+            fetchCart();
+        } else {
+            navigate('/');
+        }
+    }, [searchQuery, navigate]);
 
     const handleAdd = async (productId) => {
         try {
@@ -141,9 +144,23 @@ const ProductsPage = () => {
         return cart.some(item => item.product.productId === productId);
     };
 
+    if (loading) {
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Searching for "{searchQuery}"...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return <div className="error-message">{error}</div>;
+    }
+
     return (
-        <div className="products-page">
-            <h1>{departmentName || 'Products'}</h1>
+        <div className="search-results-container">
+            <h2 className="search-results-title">Search Results for "{searchQuery}"</h2>
+
             <ProductsGrid
                 products={products}
                 isInCart={isInCart}
@@ -151,8 +168,20 @@ const ProductsPage = () => {
                 handleRemove={handleRemove}
                 loading={loading}
             />
+
+            {products.length === 0 && (
+                <div className="no-results">
+                    <p>No products found for "{searchQuery}"</p>
+                    <button 
+                        onClick={() => navigate('/')} 
+                        className="continue-shopping-btn"
+                    >
+                        Continue Shopping
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
 
-export default ProductsPage;
+export default SearchResults;
