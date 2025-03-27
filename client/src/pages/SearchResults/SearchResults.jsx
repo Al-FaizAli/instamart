@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './SearchResults.css';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
+import API from '../../api';
 
 const SearchResults = () => {
     const [products, setProducts] = useState([]);
@@ -19,10 +20,10 @@ const SearchResults = () => {
         setLoading(true);
         try {
             // 1. First fetch products from your backend
-            const response = await axios.get(
-                `http://localhost:5000/api/products/search?q=${searchQuery}`
+            const response = await API.get(
+                `/api/products/search?q=${searchQuery}`
             );
-            
+
             // 2. Enhance products with Unsplash images
             const productsWithImages = await Promise.all(
                 response.data.map(async (product) => {
@@ -172,8 +173,8 @@ const SearchResults = () => {
             {products.length === 0 && (
                 <div className="no-results">
                     <p>No products found for "{searchQuery}"</p>
-                    <button 
-                        onClick={() => navigate('/')} 
+                    <button
+                        onClick={() => navigate('/')}
                         className="continue-shopping-btn"
                     >
                         Continue Shopping
