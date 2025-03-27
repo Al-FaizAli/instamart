@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import './Products.css';
-
+import API from '../../api';
 const ProductsPage = () => {
     const { departmentId } = useParams();
     const [products, setProducts] = useState([]);
@@ -16,13 +16,13 @@ const ProductsPage = () => {
         setLoading(true);
         try {
             // 1. Fetch products from MongoDB by department ID
-            const productsResponse = await axios.get(
-                `http://localhost:5000/api/products/department/${departmentId}`
+            const productsResponse = await API.get(
+                `/api/products/department/${departmentId}`
             );
 
             // 2. Get department name
-            const departmentResponse = await axios.get(
-                `http://localhost:5000/api/departments/${departmentId}`
+            const departmentResponse = await API.get(
+                `/api/departments/${departmentId}`
             );
 
             setDepartmentName(departmentResponse.data.department);
