@@ -3,28 +3,26 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import "./Aisles.css";
 
-// Unsplash API configuration
 const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 const UNSPLASH_API = "https://api.unsplash.com/search/photos";
 
-// Hardcoded top 16 aisles data
 const TOP_AISLES = [
-  { id: 1, name: "candy chocolate" },
-  { id: 2, name: "ice cream ice" },
-  { id: 3, name: "vitamins supplements" },
-  { id: 4, name: "yogurt" },
-  { id: 5, name: "chips pretzels" },
-  { id: 6, name: "tea" },
-  { id: 7, name: "packaged cheese" },
-  { id: 8, name: "frozen meals" },
-  { id: 9, name: "cookies cakes" },
-  { id: 10, name: "energy granola bars" },
-  { id: 11, name: "hair care" },
-  { id: 12, name: "spices seasonings" },
-  { id: 13, name: "juice nectars" },
-  { id: 14, name: "crackers" },
-  { id: 15, name: "soup broth bouillon" },
-  { id: 16, name: "baby food formula" }
+  { id: 45, name: "candy chocolate" },
+  { id: 37, name: "ice cream ice" },
+  { id: 47, name: "vitamins supplements" },
+  { id: 120, name: "yogurt" },
+  { id: 107, name: "chips pretzels" },
+  { id: 94, name: "tea" },
+  { id: 21, name: "packaged cheese" },
+  { id: 38, name: "frozen meals" },
+  { id: 61, name: "cookies cakes" },
+  { id: 3, name: "energy granola bars" },
+  { id: 22, name: "hair care" },
+  { id: 104, name: "spices seasonings" },
+  { id: 98, name: "juice nectars" },
+  { id: 78, name: "crackers" },
+  { id: 69, name: "soup broth bouillon" },
+  { id: 92, name: "baby food formula" }
 ];
 
 const capitalizeWords = (str) => {
@@ -42,7 +40,6 @@ const Aisles = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch images from Unsplash for each aisle
         const aislesWithImages = await Promise.all(
           TOP_AISLES.map(async (aisle) => {
             try {
