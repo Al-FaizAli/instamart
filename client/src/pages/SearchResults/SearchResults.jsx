@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './SearchResults.css';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
-import API from '../../api';
 
 const SearchResults = () => {
     const [products, setProducts] = useState([]);
@@ -13,36 +12,75 @@ const SearchResults = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+    const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
 
     const searchQuery = new URLSearchParams(location.search).get('q');
+
+    const parseHtmlResponse = (html) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const resultsScript = doc.querySelector('script[id="search-results"]');
+
+        if (!resultsScript) {
+            throw new Error('No search results found in response');
+        }
+
+        try {
+            return JSON.parse(resultsScript.textContent);
+        } catch (e) {
+            throw new Error('Failed to parse search results');
+        }
+    };
 
     const fetchSearchResults = async () => {
         setLoading(true);
         try {
-            // 1. First fetch products from your backend
-            const response = await API.get(
-                `/api/products/search?q=${searchQuery}`
+            // 1. Fetch from Flask API
+            const searchResponse = await axios.get(
+                `${FLASK_API_URL}/search?query=${encodeURIComponent(searchQuery)}`,
+                { headers: { 'Accept': 'application/json' } }
             );
 
-            // 2. Enhance products with Unsplash images
-            const productsWithImages = await Promise.all(
-                response.data.map(async (product) => {
-                    try {
-                        const unsplashResponse = await axios.get(
-                            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(product.product_name)}&client_id=${ACCESS_KEY}&per_page=1`
-                        );
+            // Parse response data
+            let productData = [];
+            if (Array.isArray(searchResponse.data)) {
+                productData = searchResponse.data;
+            } else if (searchResponse.data.results) {
+                productData = searchResponse.data.results;
+            } else {
+                throw new Error('Unexpected API response format');
+            }
 
+            // Extract and validate product IDs
+            const productIds = productData
+                .map(product => product.product_id)
+                .filter(id => !isNaN(parseInt(id)));
+
+            if (productIds.length === 0) {
+                setProducts([]);
+                return;
+            }
+
+            // 2. Get full product details from MongoDB
+            const detailsResponse = await axios.get(
+                `http://localhost:5000/api/products/by-ids?ids=${productIds.join(',')}`
+            );
+
+            // 3. Enhance with images
+            const productsWithImages = await Promise.all(
+                detailsResponse.data.map(async (product) => {
+                    try {
+                        const imageUrl = await fetchProductImage(product.product_name);
                         return {
                             ...product,
-                            image: unsplashResponse.data.results[0]?.urls?.small ||
-                                `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
-                            rating: (Math.random() * 2 + 3).toFixed(1) // Random rating between 3.0-5.0
+                            image: imageUrl,
+                            rating: (Math.random() * 2 + 3).toFixed(1)
                         };
-                    } catch (unsplashError) {
-                        console.error(`Error fetching image for ${product.product_name}:`, unsplashError);
+                    } catch (err) {
+                        console.error(`Image error for ${product.product_name}:`, err);
                         return {
                             ...product,
-                            image: `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
+                            image: `https://source.unsplash.com/random/300x200/?grocery`,
                             rating: (Math.random() * 2 + 3).toFixed(1)
                         };
                     }
@@ -50,12 +88,27 @@ const SearchResults = () => {
             );
 
             setProducts(productsWithImages);
-            setError('');
         } catch (err) {
-            setError('Failed to fetch search results');
-            console.error('Search error:', err);
+            console.error('Search error:', err.response?.data || err.message);
+            setError(err.response?.data?.message || 'Failed to fetch search results');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchProductImage = async (productName) => {
+        try {
+            const response = await axios.get('https://api.unsplash.com/search/photos', {
+                params: {
+                    query: productName,
+                    per_page: 1,
+                    client_id: ACCESS_KEY
+                }
+            });
+            return response.data.results[0]?.urls?.small;
+        } catch (err) {
+            console.error('Unsplash error:', err);
+            return `https://source.unsplash.com/random/300x200/?${encodeURIComponent(productName)}`;
         }
     };
 
@@ -155,22 +208,41 @@ const SearchResults = () => {
     }
 
     if (error) {
-        return <div className="error-message">{error}</div>;
+        return (
+            <div className="error-container">
+                <p className="error-message">{error}</p>
+                <button
+                    onClick={() => navigate('/')}
+                    className="continue-shopping-btn"
+                >
+                    Continue Shopping
+                </button>
+            </div>
+        );
     }
 
     return (
         <div className="search-results-container">
             <h2 className="search-results-title">Search Results for "{searchQuery}"</h2>
 
-            <ProductsGrid
-                products={products}
-                isInCart={isInCart}
-                handleAdd={handleAdd}
-                handleRemove={handleRemove}
-                loading={loading}
-            />
+            {error ? (
+                <div className="error-message">
+                    {error}
+                    <button onClick={() => window.location.reload()} className="retry-btn">
+                        Retry
+                    </button>
+                </div>
+            ) : (
+                <ProductsGrid
+                    products={products}
+                    isInCart={isInCart}
+                    handleAdd={handleAdd}
+                    handleRemove={handleRemove}
+                    loading={loading}
+                />
+            )}
 
-            {products.length === 0 && (
+            {products.length === 0 && !loading && !error && (
                 <div className="no-results">
                     <p>No products found for "{searchQuery}"</p>
                     <button
