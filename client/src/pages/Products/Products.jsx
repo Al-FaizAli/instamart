@@ -5,32 +5,47 @@ import API from '../../api';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 
 const ProductsPage = () => {
-    const { departmentId } = useParams();
+    const { aisleId } = useParams(); // Changed from departmentId to aisleId
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState([]);
-    const [departmentName, setDepartmentName] = useState('');
+    const [aisleName, setAisleName] = useState(''); // Changed from departmentName to aisleName
 
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
-    const fetchDepartmentProducts = async () => {
+    const fetchAisleProducts = async () => {
         setLoading(true);
         try {
+            // 1. Fetch products by aisle ID
             const productsResponse = await API.get(
-                `/api/products/department/${departmentId}`
-            );
-            const departmentResponse = await API.get(
-                `/api/departments/${departmentId}`
+                `/api/products/aisle/${aisleId}`
             );
 
-            setDepartmentName(departmentResponse.data.department);
+            // 2. Get aisle name (optional - if you have an aisle endpoint)
+            try {
+                const aisleResponse = await API.get(
+                    `/api/aisles/${aisleId}`
+                );
+                setAisleName(aisleResponse.data.aisle || `Aisle ${aisleId}`);
+            } catch (aisleError) {
+                console.error('Error fetching aisle name:', aisleError);
+                setAisleName(`Aisle ${aisleId}`);
+            }
 
+            // 3. Limit and enhance with images
             const limitedProducts = productsResponse.data.slice(0, 32);
             const productsWithImages = await Promise.all(
                 limitedProducts.map(async (product) => {
                     try {
                         const unsplashResponse = await axios.get(
-                            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(product.product_name)}&client_id=${ACCESS_KEY}&per_page=1`
+                            `https://api.unsplash.com/search/photos`,
+                            {
+                                params: {
+                                    query: product.product_name,
+                                    per_page: 1,
+                                    client_id: ACCESS_KEY
+                                }
+                            }
                         );
 
                         return {
@@ -52,13 +67,14 @@ const ProductsPage = () => {
 
             setProducts(productsWithImages);
         } catch (error) {
-            console.error(`Error fetching products for department ${departmentId}:`, error);
+            console.error(`Error fetching products for aisle ${aisleId}:`, error);
             setProducts([]);
         } finally {
             setLoading(false);
         }
     };
 
+    // ... rest of your existing code (fetchCart, handleAdd, handleRemove, isInCart) remains the same ...
     const fetchCart = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -74,11 +90,6 @@ const ProductsPage = () => {
             console.error('Error fetching cart:', error);
         }
     };
-
-    useEffect(() => {
-        fetchDepartmentProducts();
-        fetchCart();
-    }, [departmentId]);
 
     const handleAdd = async (productId) => {
         try {
@@ -141,9 +152,14 @@ const ProductsPage = () => {
         return cart.some(item => item.product.productId === productId);
     };
 
+    useEffect(() => {
+        fetchAisleProducts();
+        fetchCart();
+    }, [aisleId]); // Changed dependency from departmentId to aisleId
+
     return (
         <div className="products-page">
-            <h1>{departmentName || 'Products'}</h1>
+            <h1>{aisleName || 'Products'}</h1> {/* Changed from departmentName to aisleName */}
             <ProductsGrid
                 products={products}
                 isInCart={isInCart}

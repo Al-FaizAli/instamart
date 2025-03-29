@@ -44,4 +44,15 @@ router.get('/by-ids', async (req, res) => {
     });
   }
 });
+
+// Get products by aisle ID
+router.get('/aisle/:aisleId', async (req, res) => {
+  try {
+    const aisleId = parseInt(req.params.aisleId);
+    const products = await Product.find({ aisle_id: aisleId });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 export default router;
