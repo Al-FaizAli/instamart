@@ -1,4 +1,3 @@
-// client/src/api/index.js
 import axios from 'axios';
 
 const API = axios.create({
@@ -7,15 +6,25 @@ const API = axios.create({
         : 'http://localhost:5000',
 });
 
-// Products API
-export const fetchProducts = () => API.get('/api/products');
-export const fetchFeaturedProducts = () => API.get('/api/products/featured');
-export const fetchProductsByDepartment = (departmentId) =>
-    API.get(`/api/products/department/${departmentId}`);
-export const searchProducts = (query) =>
-    API.get(`/api/products/search?q=${query}`);
+API.interceptors.request.use(config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
-// Departments API
-export const fetchDepartments = () => API.get('/api/departments');
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Clear auth and redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default API;

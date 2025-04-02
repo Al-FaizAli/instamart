@@ -1,43 +1,118 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 import './Cart.css';
+import API from '../../api';
 
 const MyCart = () => {
-    const [cart, setCart] = useState(null);
+    const [cart, setCart] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { user, logout, verifySession } = useAuth();
+
+    // More flexible validation function
+    const validateCartData = (data) => {
+        if (!data) return false;
+
+        // Handle both array response and object with cart property
+        const cartData = Array.isArray(data) ? data : data.cart || data.items || data.products;
+
+        if (!Array.isArray(cartData)) return false;
+
+        // Flexible validation for different possible structures
+        return cartData.every(item => {
+            const hasId = item.product_id || item.id || item._id;
+            const hasProductInfo = item.product_details || item.product || item;
+            const hasQuantity = typeof item.quantity === 'number' || typeof item.qty === 'number';
+
+            return hasId && hasProductInfo && hasQuantity;
+        });
+    };
+
+    // Normalize data from different possible structures
+    const normalizeCartData = (data) => {
+        const cartData = Array.isArray(data) ? data : data.cart || data.items || data.products || [];
+
+        return cartData.map(item => ({
+            product_id: item.product_id || item.id || item._id,
+            product_details: {
+                ...(item.product_details || item.product || item),
+                // Ensure required fields exist with defaults
+                product_name: item.product_details?.product_name || item.product?.name || item.name || 'Unknown Product',
+                price: item.product_details?.price || item.product?.price || item.price || 0,
+                image: item.product_details?.image || item.product?.image || item.image || null
+            },
+            quantity: item.quantity || item.qty || 1
+        }));
+    };
 
     const fetchCart = async () => {
         setLoading(true);
+        setError('');
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
+
+            if (!token || !user) {
+                throw new Error('Not authenticated');
             }
 
-            const response = await axios.get('http://localhost:5000/api/cart', {
-                headers: {
-                    // 'Authorization': `Bearer ${token}`
-                }
+            const response = await API.get('/api/cart', { // Changed from '/api/cart'
+                headers: { Authorization: `Bearer ${token}` }
             });
 
-            setCart(response.data.cart);
-            setError('');
+            // Check if response is HTML (indicating wrong endpoint)
+            if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+                throw new Error('Server returned HTML instead of cart data. Check API endpoint configuration.');
+            }
+
+            if (validateCartData(response.data)) {
+                setCart(normalizeCartData(response.data));
+            } else {
+                console.error('Invalid cart data structure:', response.data);
+                throw new Error('The server returned an unexpected cart format');
+            }
         } catch (error) {
             console.error('Error fetching cart:', error);
-            setError(error.response?.data?.error || 'Failed to load cart');
+
+            if (error.response?.status === 401) {
+                try {
+                    await verifySession();
+                    await fetchCart();
+                    return;
+                } catch (refreshError) {
+                    console.error('Token refresh failed:', refreshError);
+                    logout();
+                    navigate('/login');
+                }
+            } else {
+                setError(
+                    error.response?.data?.message ||
+                    error.message ||
+                    'Failed to load cart. Please try again later.'
+                );
+            }
         } finally {
             setLoading(false);
         }
     };
 
+    const handleUnauthorized = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+    };
+
     const removeFromCart = async (productId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/cart/remove/${productId}`, {
+            if (!token) {
+                handleUnauthorized();
+                return;
+            }
+
+            await API.delete(`/api/cart/${productId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -45,7 +120,11 @@ const MyCart = () => {
             await fetchCart();
         } catch (error) {
             console.error('Error removing item:', error);
-            setError(error.response?.data?.error || 'Failed to remove item');
+            if (error.response?.status === 401) {
+                handleUnauthorized();
+            } else {
+                setError(error.response?.data?.message || 'Failed to remove item');
+            }
         }
     };
 
@@ -57,8 +136,13 @@ const MyCart = () => {
             }
 
             const token = localStorage.getItem('token');
-            await axios.patch(
-                `http://localhost:5000/api/cart/update/${productId}`,
+            if (!token) {
+                handleUnauthorized();
+                return;
+            }
+
+            await API.put(
+                `/api/cart/${productId}`,
                 { quantity: newQuantity },
                 {
                     headers: {
@@ -70,31 +154,87 @@ const MyCart = () => {
             await fetchCart();
         } catch (error) {
             console.error('Error updating quantity:', error);
-            setError(error.response?.data?.error || 'Failed to update quantity');
+            if (error.response?.status === 401) {
+                handleUnauthorized();
+            } else {
+                setError(error.response?.data?.message || 'Failed to update quantity');
+            }
         }
     };
 
     const calculateTotal = () => {
-        if (!cart?.items?.length) return 0;
-        return cart.items.reduce(
-            (total, item) => total + (item.product.price * item.quantity), 0
+        if (!cart?.length) return 0;
+        return cart.reduce(
+            (total, item) => total + (item.product_details?.price || 0) * item.quantity,
+            0
         ).toFixed(2);
     };
 
     useEffect(() => {
+        // Redirect to home page if the user is not authenticated
+        if (!user) {
+            navigate('/'); // Redirect to the home page
+            return;
+        }
+
+        const fetchCart = async () => {
+            try {
+                setLoading(true); // Start loading
+                const response = await API.get('/api/cart');
+                setCart(response.data.cart);
+                setError(null); // Clear any previous errors
+            } catch (err) {
+                console.error('Error fetching cart:', err);
+                if (err.response?.status === 401) {
+                    setError('Unauthorized. Please log in again.');
+                } else {
+                    setError('Failed to load cart. Please try again later.');
+                }
+            } finally {
+                setLoading(false); // Stop loading
+            }
+        };
+
         fetchCart();
-    }, []);
+    }, [user, navigate]);
+
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+    // Temporary debug - remove in production
+    useEffect(() => {
+        console.log('Current cart state:', cart);
+    }, [cart]);
+
+    useEffect(() => {
+        console.log('Current user auth state:', user);
+    }, [user]);
 
     if (loading) {
-        return <div className="loading-container">Loading your cart...</div>;
+        return (
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading your cart...</p>
+            </div>
+        );
     }
 
     return (
         <div className="my-cart-container">
             <h1>My Cart</h1>
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+                <div className="error-message">
+                    <p>There was a problem loading your cart</p>
+                    <button onClick={() => fetchCart()}>Retry</button>
+                    {/* Only show detailed error in development */}
+                    {process.env.NODE_ENV === 'development' && (
+                        <small>{error.toString()}</small>
+                    )}
+                </div>
+            )}
 
-            {!cart?.items?.length ? (
+            {!cart?.length ? (
                 <div className="empty-cart">
                     <p>Your cart is empty</p>
                     <button
@@ -107,26 +247,34 @@ const MyCart = () => {
             ) : (
                 <>
                     <div className="cart-items">
-                        {cart.items.map((item) => (
-                            <div key={item.product._id} className="cart-item">
-                                <img
-                                    src={item.product.image}
-                                    alt={item.product.name}
-                                    className="cart-item-image"
-                                />
+                        {cart.map((item) => (
+                            <div key={item.product_id} className="cart-item">
+                                {item.product_details?.image ? (
+                                    <img
+                                        src={item.product_details.image}
+                                        alt={item.product_details.product_name}
+                                        className="cart-item-image"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = '/placeholder-image.png';
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="image-placeholder">No Image</div>
+                                )}
                                 <div className="cart-item-details">
-                                    <h3>{item.product.name}</h3>
-                                    <p className="price">${item.product.price}</p>
+                                    <h3>{item.product_details.product_name}</h3>
+                                    <p className="price">${(item.product_details.price || 0).toFixed(2)}</p>
                                     <div className="quantity-controls">
                                         <button
-                                            onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
+                                            onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                                             disabled={item.quantity <= 1}
                                         >
                                             -
                                         </button>
                                         <span>{item.quantity}</span>
                                         <button
-                                            onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
+                                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                                         >
                                             +
                                         </button>
@@ -134,7 +282,8 @@ const MyCart = () => {
                                 </div>
                                 <button
                                     className="remove-item-btn"
-                                    onClick={() => removeFromCart(item.product._id)}
+                                    onClick={() => removeFromCart(item.product_id)}
+                                    aria-label="Remove item"
                                 >
                                     ×
                                 </button>
@@ -159,6 +308,7 @@ const MyCart = () => {
                         <button
                             className="checkout-btn"
                             onClick={() => navigate('/checkout')}
+                            disabled={!cart.length}
                         >
                             Proceed to Checkout
                         </button>

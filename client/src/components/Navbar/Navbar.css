@@ -123,30 +123,30 @@
 
 @media (max-width: 1024px) {
     .search-bar {
-        width: 350px;  
+        width: 350px;
     }
-    
+
     .delivery-info {
         font-size: 16px;
         text-align: center;
     }
-    
+
     .location {
         font-size: 14px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
+
     .nav-buttons {
-        gap: 5px; 
+        gap: 5px;
     }
-    
+
     .login-btn {
-        padding: 6px 10px; 
+        padding: 6px 10px;
         font-size: 14px;
     }
-    
+
     .cart-btn {
         padding: 6px 12px;
         font-size: 14px;
@@ -157,28 +157,81 @@
     .search-bar {
         width: 280px;
     }
-    
+
     .delivery-info {
         font-size: 14px;
         text-align: left;
     }
-    
+
     .login-btn {
         font-size: 17px;
         padding: 5px 8px;
     }
-    
+
     .cart-btn {
         font-size: 17px;
         padding: 5px 10px;
     }
 }
+
 @media (max-width: 768px) {
-    .delivery-info, .search-bar, .nav-buttons {
+
+    .delivery-info,
+    .search-bar,
+    .nav-buttons {
         display: none;
     }
 
     .hamburger-menu {
         display: block;
     }
+}
+
+/* Add these styles to your existing Navbar.css */
+
+/* Welcome message styling */
+.welcome-msg {
+    margin-right: 15px;
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+/* Logout button styling */
+.logout-btn {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    font-size: 16px;
+    background: #008000;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.logout-btn:hover {
+    background-color: #1cbb0b;
+}
+
+.logout-text {
+    margin-right: 5px;
+}
+
+.logout-icon {
+    font-weight: bolder ;
 }

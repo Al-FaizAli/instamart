@@ -24,7 +24,7 @@
 
 .continue-shopping-btn {
     padding: 10px 20px;
-    background-color: #1976d2;
+    /* background-color: #1976d2; */
     color: white;
     border: none;
     border-radius: 4px;
@@ -34,7 +34,7 @@
 }
 
 .continue-shopping-btn:hover {
-    background-color: #1565c0;
+    /* background-color: #1565c0; */
 }
 
 .loading-container {
