@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./LoginSignup.css";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../context/AuthContext';
+import API from '../../api';
 
 const LoginSignup = ({ onClose }) => {
-    const [isLogin, setIsLogin] = useState(true); 
-    const [name, setName] = useState(""); 
+    const [isLogin, setIsLogin] = useState(true);
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [otp, setOtp] = useState("");
-    const [showOtpField, setShowOtpField] = useState(false); 
+    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false); 
+    const [loading, setLoading] = useState(false);
     const modalRef = useRef(null);
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (modalRef.current && !modalRef.current.contains(event.target)) {
-                onClose();
+                onClose?.();
             }
         };
 
@@ -27,68 +31,45 @@ const LoginSignup = ({ onClose }) => {
         return re.test(email);
     };
 
-    const sendOTP = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
+
         if (!validateEmail(email)) {
             setError("Please enter a valid email address");
+            setLoading(false);
             return;
         }
 
-        setLoading(true);
-        try {
-            const response = await fetch("http://localhost:5000/api/auth/send-otp", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            });
-            const data = await response.json();
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters");
+            setLoading(false);
+            return;
+        }
 
-            if (response.ok) {
-                setShowOtpField(true);
-                setError("");
+        try {
+            const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
+            const payload = isLogin ? { email, password } : { name, email, password };
+
+            const response = await API.post(endpoint, payload);
+            console.log("Response Data:", response.data);
+            if (response.data?.token && response.data?.user) {
+                login(response.data.token, response.data.user);
+                onClose?.();
+                navigate('/', { replace: true }); // Changed to replace navigation
             } else {
-                setError(data.message || "Failed to send OTP");
+                throw new Error("Invalid response from server");
             }
         } catch (error) {
-            setError("Failed to send OTP. Please try again.");
+            console.error("Auth error:", error);
+            setError(
+                error.response?.data?.message ||
+                error.message ||
+                (isLogin ? "Login failed. Please try again." : "Signup failed. Please try again.")
+            );
         } finally {
             setLoading(false);
-        }
-    };
-
-    const verifyOTP = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch("http://localhost:5000/api/auth/verify-otp", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    email, 
-                    otp, 
-                    ...(!isLogin && { name }) 
-                }),
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("user", JSON.stringify(data.user));
-                onClose();
-            } else {
-                setError(data.message || "Failed to verify OTP");
-            }
-        } catch (error) {
-            setError("Failed to verify OTP. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!showOtpField) {
-            sendOTP();
-        } else {
-            verifyOTP();
         }
     };
 
@@ -100,7 +81,7 @@ const LoginSignup = ({ onClose }) => {
                 </button>
                 <h2>{isLogin ? "Login" : "Sign Up"}</h2>
                 <form onSubmit={handleSubmit}>
-                    {!isLogin && !showOtpField && (
+                    {!isLogin && (
                         <div className="form-group">
                             <label htmlFor="name">Name</label>
                             <input
@@ -122,30 +103,27 @@ const LoginSignup = ({ onClose }) => {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Enter your email"
                             required
-                            disabled={showOtpField}
                         />
                     </div>
-                    {showOtpField && (
-                        <div className="form-group">
-                            <label htmlFor="otp">OTP</label>
-                            <input
-                                type="text"
-                                id="otp"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                placeholder="Enter 6-digit OTP"
-                                required
-                                maxLength={6}
-                            />
-                        </div>
-                    )}
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            required
+                            minLength={6}
+                        />
+                    </div>
                     {error && <p className="error-message">{error}</p>}
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         className="submit-btn"
                         disabled={loading}
                     >
-                        {loading ? "Processing..." : showOtpField ? "Verify OTP" : "Send OTP"}
+                        {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
                     </button>
                 </form>
                 <p>
@@ -154,7 +132,6 @@ const LoginSignup = ({ onClose }) => {
                         className="toggle-link"
                         onClick={() => {
                             setIsLogin(!isLogin);
-                            setShowOtpField(false);
                             setError("");
                         }}
                     >

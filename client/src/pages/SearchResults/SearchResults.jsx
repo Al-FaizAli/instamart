@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './SearchResults.css';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
+import API from '../../api';
 
 const SearchResults = () => {
     const [products, setProducts] = useState([]);
@@ -13,6 +14,7 @@ const SearchResults = () => {
     const navigate = useNavigate();
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
     const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
+
 
     const searchQuery = new URLSearchParams(location.search).get('q');
 
@@ -62,8 +64,8 @@ const SearchResults = () => {
             }
 
             // 2. Get full product details from MongoDB
-            const detailsResponse = await axios.get(
-                `http://localhost:5000/api/products/by-ids?ids=${productIds.join(',')}`
+            const detailsResponse = await API.get(
+                `/api/products/by-ids?ids=${productIds.join(',')}`
             );
 
             // 3. Enhance with images

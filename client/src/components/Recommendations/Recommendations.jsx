@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import RecommendationCard from './RecommendationCard';
 import './Recommendations.css';
+import { useAuth } from '../../context/AuthContext'; // Import AuthContext to get the logged-in user
 
 const Recommendations = () => {
-  const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+  const { user } = useAuth(); // Get the logged-in user
   const [pastRecommendations, setPastRecommendations] = useState([]);
   const [ourRecommendations, setOurRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
   const generateProductDetails = (product, index, type) => {
     const prices = [80, 25, 16, 74];
@@ -26,15 +30,21 @@ const Recommendations = () => {
 
   const fetchRecommendations = async () => {
     setLoading(true);
+    if (!user || !user.userId) {
+      console.error('User is not logged in or userId is missing.');
+      setError('Please log in to see recommendations.');
+      return;
+    }
     try {
-      const pastResponse = await axios.get(
-        `https://api.unsplash.com/search/photos?query=grocery+dairy+bakery&client_id=${ACCESS_KEY}&per_page=10`
-      );
-      const pastWithDetails = pastResponse.data.results.map((product, index) =>
-        generateProductDetails(product, index, 'past')
-      );
-      setPastRecommendations(pastWithDetails);
+      // Fetch past recommendations for the logged-in user
+      if (user) {
+        const pastResponse = await axios.get(`https://collab-new.onrender.com/recommend/past`, {
+          params: { user_id: user.userId }
+        });
+        setPastRecommendations(pastResponse.data);
+      }
 
+      // Fetch our recommendations (using Unsplash API as an example)
       const ourResponse = await axios.get(
         `https://api.unsplash.com/search/photos?query=healthy+food+vegetables&client_id=${ACCESS_KEY}&per_page=6`
       );
@@ -42,8 +52,9 @@ const Recommendations = () => {
         generateProductDetails(product, index, 'our')
       );
       setOurRecommendations(ourWithDetails);
-    } catch (error) {
-      console.error('Error fetching recommendations:', error);
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+      setError('Failed to load recommendations. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -51,20 +62,38 @@ const Recommendations = () => {
 
   useEffect(() => {
     fetchRecommendations();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return <div className="loading-message">Loading recommendations...</div>;
   }
 
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
   return (
     <div className="recommendations-container">
       <section className="recommendation-section">
-        <h2>Past Recommendations</h2>
+        <h2>Your Past Products</h2>
         <div className="scrollable-container">
-          {pastRecommendations.map((product) => (
-            <RecommendationCard key={product.id} product={product} type="past" />
-          ))}
+          {pastRecommendations.length > 0 ? (
+            pastRecommendations.map((product, index) => (
+              <RecommendationCard
+                key={`past_${index}`}
+                product={{
+                  id: `past_${index}`,
+                  name: product.product,
+                  rating: product.rating,
+                  price: Math.floor(Math.random() * 100) + 1, // Random price for display
+                  category: 'Past Product'
+                }}
+                type="past"
+              />
+            ))
+          ) : (
+            <p>No past products found.</p>
+          )}
         </div>
       </section>
 

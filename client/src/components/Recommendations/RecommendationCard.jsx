@@ -4,8 +4,8 @@ import './RecommendationCard.css';
 const RecommendationCard = ({ product, type = 'past' }) => {
   return (
     <div className={`recommendation-card ${type}`}>
-      <img 
-        src={product.urls?.regular || '/images/placeholder.jpg'} 
+      <img
+        src={product.urls?.regular || '/images/placeholder.jpg'}
         alt={product.name}
         className="product-image"
       />

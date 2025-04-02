@@ -3,23 +3,71 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './SearchBar.css';
 import API from '../../api';
+
 const SearchBar = () => {
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
     const searchRef = useRef(null);
     const navigate = useNavigate();
+    const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
 
     useEffect(() => {
         const fetchSuggestions = async () => {
             if (query.length > 2) {
+                setLoadingSuggestions(true);
                 try {
-                    const response = await API.get(
-                        `/api/products/search/suggestions?q=${query}`
+                    // 1. First fetch from Flask API (same as search results)
+                    const searchResponse = await axios.get(
+                        `${FLASK_API_URL}/search?query=${encodeURIComponent(query)}`,
+                        { headers: { 'Accept': 'application/json' } }
                     );
-                    setSuggestions(response.data);
+
+                    // Parse response data (same logic as search results)
+                    let productData = [];
+                    if (Array.isArray(searchResponse.data)) {
+                        productData = searchResponse.data;
+                    } else if (searchResponse.data.results) {
+                        productData = searchResponse.data.results;
+                    }
+
+                    // Extract product IDs
+                    const productIds = productData
+                        .map(product => product.product_id)
+                        .filter(id => !isNaN(parseInt(id)));
+
+                    if (productIds.length === 0) {
+                        setSuggestions([]);
+                        return;
+                    }
+
+                    // 2. Get full product details from MongoDB (same as search results)
+                    const detailsResponse = await API.get(
+                        `/api/products/by-ids?ids=${productIds.join(',')}`
+                    );
+
+                    // Limit to 10 suggestions and format them
+                    const limitedSuggestions = detailsResponse.data.slice(0, 10).map(product => ({
+                        ...product,
+                        image: product.image || `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)}`
+                    }));
+
+                    setSuggestions(limitedSuggestions);
                 } catch (error) {
                     console.error('Error fetching suggestions:', error);
+                    // Fallback to simple text search if NLP fails
+                    try {
+                        const fallbackResponse = await API.get(
+                            `/api/products/search/suggestions?q=${query}`
+                        );
+                        setSuggestions(fallbackResponse.data.slice(0, 10));
+                    } catch (fallbackError) {
+                        console.error('Fallback suggestion error:', fallbackError);
+                        setSuggestions([]);
+                    }
+                } finally {
+                    setLoadingSuggestions(false);
                 }
             } else {
                 setSuggestions([]);
@@ -54,8 +102,7 @@ const SearchBar = () => {
         }
     };
 
-    const handleSuggestionClick = (productName) => {
-        setQuery(productName);
+    const handleSuggestionClick = (productId, productName) => {
         navigate(`/search?q=${productName}`);
         setShowSuggestions(false);
     };
@@ -81,17 +128,31 @@ const SearchBar = () => {
                 </button>
             </form>
 
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && (loadingSuggestions || suggestions.length > 0) && (
                 <div className="suggestions-dropdown">
-                    {suggestions.map((product) => (
-                        <div
-                            key={product._id}
-                            className="suggestion-item"
-                            onClick={() => handleSuggestionClick(product.product_name)}
-                        >
-                            {product.product_name}
-                        </div>
-                    ))}
+                    {loadingSuggestions ? (
+                        <div className="suggestion-loading">Loading suggestions...</div>
+                    ) : (
+                        suggestions.map((product) => (
+                            <div
+                                key={product.product_id}
+                                className="suggestion-item"
+                                onClick={() => handleSuggestionClick(product.product_id, product.product_name)}
+                            >
+                                <img
+                                    src={product.image}
+                                    alt={product.product_name}
+                                    className="suggestion-image"
+                                />
+                                <div className="suggestion-text">
+                                    <div className="suggestion-name">{product.product_name}</div>
+                                    {product.price && (
+                                        <div className="suggestion-price">${product.price.toFixed(2)}</div>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             )}
         </div>
