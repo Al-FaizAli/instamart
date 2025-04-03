@@ -1,0 +1,64 @@
+.footer {
+    background-color: #f8f9fa; /* Light background to match the website */
+    color: #333; /* Dark text for contrast */
+    padding: 30px 20px;
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+    border-top: 2px solid #28a745; /* Green border to match the website theme */
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.contributors h4,
+.social-media h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #28a745; /* Green heading color */
+}
+
+.contributors ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.contributors ul li {
+    font-size: 0.9rem;
+    margin: 5px 0;
+    color: #555; /* Subtle text color */
+}
+
+.social-media .social-icons {
+    display: flex;
+    gap: 15px;
+}
+
+.social-media .social-icons a {
+    color: #28a745; /* Green icon color */
+    font-size: 1.5rem;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.social-media .social-icons a:hover {
+    transform: scale(1.2);
+    color: #155724; /* Darker green on hover */
+}
+
+.copyright p {
+    font-size: 0.9rem;
+    margin: 5px 0;
+    color: #666; /* Subtle text color */
+    opacity: 0.9;
+}
+
+.copyright p:last-child {
+    font-size: 0.85rem;
+    color: #28a745; /* Green for the "Made with ❤️" text */
+}
