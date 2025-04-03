@@ -3,6 +3,7 @@ import './Home.css'
 import Aisles from '../../components/Aisles/Aisles'
 import HeroSection from '../../components/Hero/Hero'
 import Recommendations from '../../components/Recommendations/Recommendations'
+import Footer from '../../components/Footer/Footer'
 
 export default function Home() {
     return (
@@ -10,6 +11,7 @@ export default function Home() {
             <HeroSection />
             <Aisles />
             <Recommendations />
+            <Footer />
         </div>
     )
 }
