@@ -1,78 +1,157 @@
+/* Recommendations.css */
+.recommendations-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.recommendation-section {
+  margin-bottom: 40px;
+}
+
+.recommendation-section h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.scrollable-container {
+  display: flex;
+  overflow-x: auto;
+  padding: 10px 0;
+  gap: 20px;
+  scrollbar-width: thin;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.no-items {
+  color: #666;
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #4CAF50;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-bottom: 15px;
+}
+
+.retry-button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.retry-button:hover {
+  background: #388E3C;
+}
+
+/* RecommendationCard.css */
 .recommendation-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: transform 0.2s;
-    background: white;
+  width: 250px;
+  min-height: 380px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.recommendation-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.product-image-container {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
 }
 
-.recommendation-card img {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
+.image-skeleton {
+  width: 100%;
+  height: 100%;
+  background: #f5f5f5;
+  position: relative;
+  overflow: hidden;
 }
 
-.recommendation-card .product-info {
-    padding: 1rem;
+.skeleton-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-.recommendation-card h4 {
-    margin: 0 0 0.5rem 0;
-    color: #333;
-    font-size: 1rem;
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-.recommendation-card p {
-    margin: 0 0 0.5rem 0;
-    font-weight: bold;
-    color: #2e7d32;
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
 }
 
-.recommendation-card .rating {
-    color: #ffc107;
-    margin-bottom: 0.5rem;
+.product-image.loading {
+  opacity: 0;
+  height: 0;
 }
 
-.recommendation-card .add-to-cart {
-    background: #2e7d32;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
+.product-image.loaded {
+  opacity: 1;
 }
 
-.recommendation-card.our {
-    border-top: 3px solid #ff9800;
+.recommendation-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #4CAF50;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
-.recommendation-card.past {
-    border-top: 3px solid #2196f3;
-}
-
-.recommendation-card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.product-category {
-    font-size: 0.8rem;
-    color: #666;
-    margin: 0.3rem 0;
-    text-transform: capitalize;
-}
-
-.loading-message {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.2rem;
-    color: #666;
-}
+/* Rest of your existing card styles... */

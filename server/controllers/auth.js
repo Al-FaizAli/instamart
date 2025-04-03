@@ -55,7 +55,6 @@ export const signup = async (req, res) => {
             email: user.email,
             createdAt: user.createdAt
         };
-        console.log("User Response:", userResponse);
         res.status(201).json({
             success: true,
             token,
@@ -105,7 +104,6 @@ export const login = async (req, res) => {
             email: user.email,
             createdAt: user.createdAt
         };
-        console.log("User Response:", userResponse);
         res.status(200).json({
             success: true,
             token,

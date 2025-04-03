@@ -53,7 +53,6 @@ const LoginSignup = ({ onClose }) => {
             const payload = isLogin ? { email, password } : { name, email, password };
 
             const response = await API.post(endpoint, payload);
-            console.log("Response Data:", response.data);
             if (response.data?.token && response.data?.user) {
                 login(response.data.token, response.data.user);
                 onClose?.();
