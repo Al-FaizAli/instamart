@@ -7,16 +7,44 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // useEffect(() => {
+  //   const loadUser = async () => {
+  //     try {
+  //       const storedUser = localStorage.getItem('user');
+  //       const storedToken = localStorage.getItem('token');
+
+  //       if (storedUser && storedToken) {
+  //         // Verify token with backend
+  //         const response = await API.get('/api/auth/verify');
+  //         if (response.data.user) {
+  //           setUser(JSON.parse(storedUser));
+  //         } else {
+  //           localStorage.removeItem('user');
+  //           localStorage.removeItem('token');
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Auth load error:', error);
+  //       localStorage.removeItem('user');
+  //       localStorage.removeItem('token');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   loadUser();
+  // }, []);
+
   const verifySession = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
-  
+
       if (!token || !storedUser) {
         setLoading(false);
         return;
       }
-  
+
       // Skip verification during login or signup
       if (
         window.location.pathname.includes('/login') ||
@@ -26,14 +54,14 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return;
       }
-  
+
       // Verify token with the backend
       const response = await API.get('/api/auth/verify');
-  
+
       if (response.data?.user) {
         setUser(response.data.user);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-  
+
         // Update token if a new one is issued
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
@@ -41,7 +69,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Session verification error:', error);
-  
+
       // Stop infinite requests by clearing auth and redirecting to login
       if (error.response?.status === 401) {
         clearAuth();

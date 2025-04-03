@@ -1,75 +1,126 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import RecommendationCard from './RecommendationCard';
 import './Recommendations.css';
-import { useAuth } from '../../context/AuthContext'; // Import AuthContext to get the logged-in user
+import { useAuth } from '../../context/AuthContext';
 
 const Recommendations = () => {
-  const { user } = useAuth(); // Get the logged-in user
+  const { user } = useAuth();
   const [pastRecommendations, setPastRecommendations] = useState([]);
   const [ourRecommendations, setOurRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
-  const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-
-  const generateProductDetails = (product, index, type) => {
-    const prices = [80, 25, 16, 74];
-    const ratings = [4, 4.5, 5, 3.5];
-    const categories = ['Dairy', 'Bakery', 'Vegetables', 'Beverages'];
-
-    return {
-      ...product,
-      id: `rec_${type}_${index}`,
-      name: product.alt_description || `${type} product ${index + 1}`,
-      price: prices[index % prices.length],
-      rating: ratings[index % ratings.length],
-      category: categories[index % categories.length]
-    };
-  };
-
-  const fetchRecommendations = async () => {
-    setLoading(true);
-    if (!user || !user.userId) {
-      console.error('User is not logged in or userId is missing.');
-      setError('Please log in to see recommendations.');
-      return;
-    }
+  const fetchUnsplashImages = useCallback(async (query, count) => {
     try {
-      // Fetch past recommendations for the logged-in user
-      if (user) {
-        const pastResponse = await axios.get(`https://collab-new.onrender.com/recommend/past`, {
-          params: { user_id: user.userId }
-        });
-        setPastRecommendations(pastResponse.data);
+      if (!UNSPLASH_ACCESS_KEY) {
+        console.warn('Unsplash API key not found, using placeholders');
+        return Array(count).fill({ urls: { regular: '/images/placeholder.jpg' } });
       }
 
-      // Fetch our recommendations (using Unsplash API as an example)
-      const ourResponse = await axios.get(
-        `https://api.unsplash.com/search/photos?query=healthy+food+vegetables&client_id=${ACCESS_KEY}&per_page=6`
+      const response = await axios.get(
+        `https://api.unsplash.com/search/photos`,
+        {
+          params: {
+            query: query,
+            per_page: count,
+            orientation: 'squarish'
+          },
+          headers: {
+            Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+          }
+        }
       );
-      const ourWithDetails = ourResponse.data.results.map((product, index) =>
-        generateProductDetails(product, index, 'our')
-      );
-      setOurRecommendations(ourWithDetails);
+      return response.data.results;
     } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      setError('Failed to load recommendations. Please try again later.');
+      console.error('Error fetching Unsplash images:', err);
+      return Array(count).fill({ urls: { regular: '/images/placeholder.jpg' } });
+    }
+  }, [UNSPLASH_ACCESS_KEY]);
+
+  const fetchRecommendations = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    if (!user?.userId) {
+      setError('Please log in to see recommendations.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // First fetch all product data
+      const [pastResponse, ourResponse] = await Promise.all([
+        axios.get(`https://past-recommendations.onrender.com/recommend/past`, {
+          params: { user_id: user.userId }
+        }),
+        axios.get(`https://past-recommendations.onrender.com/recommend`, {
+          params: { user_id: user.userId}
+        })
+      ]);
+
+      // Then fetch images for all products at once
+      const [pastImages, ourImages] = await Promise.all([
+        fetchUnsplashImages('grocery items', pastResponse.data.length),
+        fetchUnsplashImages('healthy food', ourResponse.data.length)
+      ]);
+
+      // Set all state at once to minimize re-renders
+      setPastRecommendations(pastResponse.data.map((product, index) => ({
+        ...product,
+        id: `past_${index}`,
+        name: product.product,
+        price: Math.floor(Math.random() * 100) + 1,
+        category: 'Past Product',
+        rating: product.rating || 4.0,
+        image: pastImages[index]?.urls?.regular || '/images/placeholder.jpg',
+        alt: pastImages[index]?.alt_description || product.product
+      })));
+
+      setOurRecommendations(ourResponse.data.map((product, index) => ({
+        ...product,
+        id: `rec_our_${index}`,
+        name: product.product,
+        price: Math.floor(Math.random() * 100) + 1,
+        category: 'Recommended',
+        rating: product.rating || 4.5,
+        image: ourImages[index]?.urls?.regular || '/images/placeholder.jpg',
+        alt: ourImages[index]?.alt_description || product.product
+      })));
+
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err.response?.data?.message || 'Failed to load recommendations.');
+      setPastRecommendations([]);
+      setOurRecommendations([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, fetchUnsplashImages]);
 
   useEffect(() => {
     fetchRecommendations();
-  }, [user]);
+  }, [fetchRecommendations]);
 
   if (loading) {
-    return <div className="loading-message">Loading recommendations...</div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading recommendations...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-message">{error}</div>;
+    return (
+      <div className="error-container">
+        <p className="error-message">{error}</p>
+        <button onClick={fetchRecommendations} className="retry-button">
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -78,21 +129,11 @@ const Recommendations = () => {
         <h2>Your Past Products</h2>
         <div className="scrollable-container">
           {pastRecommendations.length > 0 ? (
-            pastRecommendations.map((product, index) => (
-              <RecommendationCard
-                key={`past_${index}`}
-                product={{
-                  id: `past_${index}`,
-                  name: product.product,
-                  rating: product.rating,
-                  price: Math.floor(Math.random() * 100) + 1, // Random price for display
-                  category: 'Past Product'
-                }}
-                type="past"
-              />
+            pastRecommendations.map((product) => (
+              <RecommendationCard key={product.id} product={product} type="past" />
             ))
           ) : (
-            <p>No past products found.</p>
+            <p className="no-items">No past products found.</p>
           )}
         </div>
       </section>
@@ -100,13 +141,17 @@ const Recommendations = () => {
       <section className="recommendation-section">
         <h2>Our Recommendations</h2>
         <div className="scrollable-container">
-          {ourRecommendations.map((product) => (
-            <RecommendationCard key={product.id} product={product} type="our" />
-          ))}
+          {ourRecommendations.length > 0 ? (
+            ourRecommendations.map((product) => (
+              <RecommendationCard key={product.id} product={product} type="our" />
+            ))
+          ) : (
+            <p className="no-items">No recommendations available.</p>
+          )}
         </div>
       </section>
     </div>
   );
 };
 
-export default Recommendations;
+export default React.memo(Recommendations);
