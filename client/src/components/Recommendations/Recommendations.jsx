@@ -50,6 +50,7 @@ const Recommendations = () => {
     }
 
     try {
+      // First fetch all product data
       const [pastResponse, ourResponse] = await Promise.all([
         axios.get(`https://past-recommendations.onrender.com/recommend/past`, {
           params: { user_id: user.userId }
@@ -59,11 +60,13 @@ const Recommendations = () => {
         })
       ]);
 
+      // Then fetch images for all products at once
       const [pastImages, ourImages] = await Promise.all([
         fetchUnsplashImages('grocery items', pastResponse.data.length),
         fetchUnsplashImages('healthy food', ourResponse.data.length)
       ]);
 
+      // Set all state at once to minimize re-renders
       setPastRecommendations(pastResponse.data.map((product, index) => ({
         ...product,
         id: `past_${index}`,
