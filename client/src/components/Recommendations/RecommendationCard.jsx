@@ -3,49 +3,49 @@ import './RecommendationCard.css';
 
 const RecommendationCard = React.memo(({ product, type = 'past' }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [currentImage, setCurrentImage] = useState('/images/placeholder.jpg');
+  // const [currentImage, setCurrentImage] = useState('/images/placeholder.jpg');
 
-  useEffect(() => {
-    let isMounted = true;
-    setImageLoaded(false);
+  // useEffect(() => {
+  //   let isMounted = true;
+  //   setImageLoaded(false);
 
-    const img = new Image();
-    img.src = product.image;
+  //   const img = new Image();
+  //   img.src = product.image;
 
-    img.onload = () => {
-      if (isMounted) {
-        setCurrentImage(product.image);
-        setImageLoaded(true);
-      }
-    };
+  //   img.onload = () => {
+  //     if (isMounted) {
+  //       setCurrentImage(product.image);
+  //       setImageLoaded(true);
+  //     }
+  //   };
 
-    img.onerror = () => {
-      if (isMounted) {
-        setCurrentImage('/images/placeholder.jpg');
-        setImageLoaded(true);
-      }
-    };
+    // img.onerror = () => {
+    //   if (isMounted) {
+    //     setCurrentImage('/images/placeholder.jpg');
+    //     setImageLoaded(true);
+    //   }
+    // };
 
-    return () => {
-      isMounted = false;
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [product.image]);
+  //   return () => {
+  //     isMounted = false;
+  //     img.onload = null;
+  //     img.onerror = null;
+  //   };
+  // }, [product.image]);
 
   return (
     <div className={`recommendation-card ${type}`}>
       <div className="product-image-container">
-        {!imageLoaded && (
+        {/* {!imageLoaded && (
           <div className="image-skeleton">
             <div className="skeleton-animation"></div>
           </div>
-        )}
-        <img
+        )} */}
+        {/* <img
           src={currentImage}
           alt={product.alt || product.name}
           className={`product-image ${imageLoaded ? 'loaded' : 'loading'}`}
-        />
+        /> */}
         {type === 'our' && (
           <span className="recommendation-badge">Recommended</span>
         )}

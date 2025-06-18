@@ -177,7 +177,7 @@ const Recommendations = () => {
 
   if (error) {
     return (
-      <div className="error-container">
+      <div className="error-container-recommendation">
         <p className="error-message">{error}</p>
         {!user?.userId ? (
           <>
@@ -185,7 +185,7 @@ const Recommendations = () => {
               className="login-button"
               onClick={() => setIsLoginOpen(true)}
             >
-              Login / Signup
+              Login
             </button>
             {isLoginOpen && (
               <LoginSignup onClose={() => setIsLoginOpen(false)} />
