@@ -74,7 +74,7 @@ const LoginSignup = ({ onClose }) => {
 
     return (
         <div className="login-signup-overlay">
-            <div className="login-signup-container" ref={modalRef}>
+            <div className="login-signup-container login-signup-modal" ref={modalRef}>
                 <button className="close-btn" onClick={onClose}>
                     &times;
                 </button>

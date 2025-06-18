@@ -101,10 +101,11 @@ const ProductsPage = () => {
 
             const product = products.find(p => p.product_id === productId);
             if (!product) return;
+            console.log(product);
 
             await axios.post('http://localhost:5000/api/cart/add',
                 {
-                    productId: product.product_id,
+                    product_id: product.product_id,
                     name: product.product_name,
                     price: product.price || 10.99,
                     image: product.image,

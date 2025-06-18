@@ -64,7 +64,7 @@
   }
 }
 
-.error-container {
+.error-container-recommendation{
   text-align: center;
   padding: 20px;
 }
@@ -74,7 +74,7 @@
   margin-bottom: 15px;
 }
 
-.retry-button {
+.retry-button,.login-button {
   background: #4CAF50;
   color: white;
   border: none;
@@ -84,17 +84,7 @@
   transition: background 0.3s;
 }
 
-.login-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.retry-button:hover {
+.retry-button,.login-button:hover {
   background: #388E3C;
 }
 

@@ -1,6 +1,6 @@
 // server/routes/cart.js
 import express from 'express';
-import { 
+import {
   getCart,
   addToCart,
   updateCartItem,
@@ -15,7 +15,7 @@ const router = express.Router();
 router.use(auth);
 
 router.get('/', getCart);
-router.post('/', addToCart);
+router.post('/add', addToCart);
 router.put('/:product_id', updateCartItem);
 router.delete('/:product_id', removeFromCart);
 router.delete('/', clearCart);
