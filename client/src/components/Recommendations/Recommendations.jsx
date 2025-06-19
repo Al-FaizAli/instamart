@@ -15,17 +15,26 @@ const Recommendations = () => {
 
   // Load cached recommendations on mount
   useEffect(() => {
-    if (user?.userId) {
-      const cachedPast = localStorage.getItem(`pastRecommendations_${user.userId}`);
-      const cachedOur = localStorage.getItem(`ourRecommendations_${user.userId}`);
-      if (cachedPast) setPastRecommendations(JSON.parse(cachedPast));
-      if (cachedOur) setOurRecommendations(JSON.parse(cachedOur));
-      // Only set loading to true if no cache
-      if (!cachedPast && !cachedOur) setLoading(true);
-      else setLoading(false);
-    }
-  }, [user?.userId]);
+    if (!user?.userId) return;
 
+    const cachedPast = localStorage.getItem(`pastRecommendations_${user.userId}`);
+    const cachedOur = localStorage.getItem(`ourRecommendations_${user.userId}`);
+
+    if (cachedPast && cachedOur) {
+      setPastRecommendations(JSON.parse(cachedPast));
+      setOurRecommendations(JSON.parse(cachedOur));
+      setLoading(false);
+      // Only fetch if you want to refresh, or provide a manual refresh button
+      return;
+    }
+
+    // If not cached, fetch from API
+    setLoading(true);
+    fetchRecommendations()
+      .catch((err) => setError('Failed to load recommendations.'))
+      .finally(() => setLoading(false));
+  }, [user?.userId]);
+  
   const fetchUnsplashImages = useCallback(async (query, count) => {
     try {
       if (!UNSPLASH_ACCESS_KEY) {
