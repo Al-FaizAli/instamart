@@ -3,6 +3,9 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import API from '../../api';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
+import './Products.css'
+import { FiSearch, FiFilter } from 'react-icons/fi';
+import { IoIosArrowForward } from 'react-icons/io';
 
 const ProductsPage = () => {
     const { aisleId } = useParams(); // Changed from departmentId to aisleId
@@ -101,7 +104,6 @@ const ProductsPage = () => {
 
             const product = products.find(p => p.product_id === productId);
             if (!product) return;
-            console.log(product);
 
             await axios.post('http://localhost:5000/api/cart/add',
                 {
@@ -160,7 +162,18 @@ const ProductsPage = () => {
 
     return (
         <div className="products-page">
-            <h1>{aisleName || 'Products'}</h1> {/* Changed from departmentName to aisleName */}
+            <div className="breadcrumb">
+                <a href="/">Home</a>
+                <span className="breadcrumb-separator">/</span>
+                <a href="/aisles">Aisles</a>
+                <span className="breadcrumb-separator">/</span>
+                <span>{aisleName}</span>
+            </div>
+
+            <div className="aisle-header">
+                <h1 className="aisle-title">{aisleName || 'Products'}</h1>
+            </div>
+
             <ProductsGrid
                 products={products}
                 isInCart={isInCart}

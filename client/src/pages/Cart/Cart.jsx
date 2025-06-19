@@ -202,15 +202,7 @@ const MyCart = () => {
     if (error) {
         return <div>{error}</div>;
     }
-    // Temporary debug - remove in production
-    useEffect(() => {
-        console.log('Current cart state:', cart);
-    }, [cart]);
-
-    useEffect(() => {
-        console.log('Current user auth state:', user);
-    }, [user]);
-
+    
     if (loading) {
         return (
             <div className="loading-container">
@@ -220,6 +212,7 @@ const MyCart = () => {
         );
     }
 
+    // In the return statement, modify the layout structure:
     return (
         <div className="my-cart-container">
             <h1>My Cart</h1>
@@ -227,7 +220,6 @@ const MyCart = () => {
                 <div className="error-message">
                     <p>There was a problem loading your cart</p>
                     <button onClick={() => fetchCart()}>Retry</button>
-                    {/* Only show detailed error in development */}
                     {process.env.NODE_ENV === 'development' && (
                         <small>{error.toString()}</small>
                     )}
@@ -245,75 +237,79 @@ const MyCart = () => {
                     </button>
                 </div>
             ) : (
-                <>
-                    <div className="cart-items">
-                        {cart.map((item) => (
-                            <div key={item.product_id} className="cart-item">
-                                {item.product_details?.image ? (
-                                    <img
-                                        src={item.product_details.image}
-                                        alt={item.product_details.product_name}
-                                        className="cart-item-image"
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = '/placeholder-image.png';
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="image-placeholder">No Image</div>
-                                )}
-                                <div className="cart-item-details">
-                                    <h3>{item.product_details.product_name}</h3>
-                                    <p className="price">${(item.product_details.price || 0).toFixed(2)}</p>
-                                    <div className="quantity-controls">
+                <div className="cart-layout">
+                    <div className="cart-content">
+                        <div className="cart-main">
+                            <div className="cart-items">
+                                {cart.map((item) => (
+                                    <div key={item.product_id} className="cart-item">
+                                        {item.product_details?.image ? (
+                                            <img
+                                                src={item.product_details.image}
+                                                alt={item.product_details.product_name}
+                                                className="cart-item-image"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = '/placeholder-image.png';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="image-placeholder">No Image</div>
+                                        )}
+                                        <div className="cart-item-details">
+                                            <h3>{item.product_details.product_name}</h3>
+                                            <p className="price">${(item.product_details.price || 0).toFixed(2)}</p>
+                                            <div className="quantity-controls">
+                                                <button
+                                                    onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    -
+                                                </button>
+                                                <span>{item.quantity}</span>
+                                                <button
+                                                    onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
                                         <button
-                                            onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
-                                            disabled={item.quantity <= 1}
+                                            className="remove-item-btn"
+                                            onClick={() => removeFromCart(item.product_id)}
+                                            aria-label="Remove item"
                                         >
-                                            -
-                                        </button>
-                                        <span>{item.quantity}</span>
-                                        <button
-                                            onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                        >
-                                            +
+                                            ×
                                         </button>
                                     </div>
-                                </div>
-                                <button
-                                    className="remove-item-btn"
-                                    onClick={() => removeFromCart(item.product_id)}
-                                    aria-label="Remove item"
-                                >
-                                    ×
-                                </button>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </div>
 
-                    <div className="cart-summary">
-                        <h3>Order Summary</h3>
-                        <div className="summary-row">
-                            <span>Subtotal</span>
-                            <span>${calculateTotal()}</span>
+                        <div className="cart-summary">
+                            <h3>Order Summary</h3>
+                            <div className="summary-row">
+                                <span>Subtotal</span>
+                                <span>${calculateTotal()}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span>Delivery</span>
+                                <span>$0.00</span>
+                            </div>
+                            <div className="summary-row total">
+                                <span>Total</span>
+                                <span>${calculateTotal()}</span>
+                            </div>
+                            <button
+                                className="checkout-btn"
+                                onClick={() => navigate('/checkout')}
+                                disabled={!cart.length}
+                            >
+                                Proceed to Checkout
+                            </button>
                         </div>
-                        <div className="summary-row">
-                            <span>Delivery</span>
-                            <span>$0.00</span>
-                        </div>
-                        <div className="summary-row total">
-                            <span>Total</span>
-                            <span>${calculateTotal()}</span>
-                        </div>
-                        <button
-                            className="checkout-btn"
-                            onClick={() => navigate('/checkout')}
-                            disabled={!cart.length}
-                        >
-                            Proceed to Checkout
-                        </button>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
