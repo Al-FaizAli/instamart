@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import API from '../../api';
@@ -13,71 +13,68 @@ const ProductsPage = () => {
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState([]);
     const [aisleName, setAisleName] = useState(''); // Changed from departmentName to aisleName
+    const aisleCache = useRef({}); // In-memory cache for this session
 
     const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
+    // Helper to fetch Unsplash image for a product
+    const fetchUnsplashImage = async (query) => {
+        try {
+            const res = await fetch(
+                `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${ACCESS_KEY}`
+            );
+            const data = await res.json();
+            return data.results?.[0]?.urls?.small || '/placeholder.png';
+        } catch {
+            return '/placeholder.png';
+        }
+    };
+
     const fetchAisleProducts = async () => {
         setLoading(true);
+
+        // 1. Check localStorage cache first
+        const cacheKey = `aisleProducts_${aisleId}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const { products, aisleName } = JSON.parse(cached);
+            setProducts(products);
+            setAisleName(aisleName);
+            setLoading(false);
+            return;
+        }
+
+        // 2. If not cached, fetch from backend and Unsplash
         try {
-            // 1. Fetch products by aisle ID
-            const productsResponse = await API.get(
-                `/api/products/aisle/${aisleId}`
+            const productsRes = await API.get(`/api/products/aisle/${aisleId}`);
+            let aisleNameFetched = `Aisle ${aisleId}`;
+            try {
+                const aisleRes = await API.get(`/api/aisles/${aisleId}`);
+                aisleNameFetched = aisleRes.data.aisle || aisleNameFetched;
+            } catch { }
+
+            const productsWithImages = await Promise.all(
+                productsRes.data.slice(0, 32).map(async (product) => ({
+                    ...product,
+                    image: await fetchUnsplashImage(product.product_name),
+                    rating: (Math.random() * 2 + 3).toFixed(1)
+                }))
             );
 
-            // 2. Get aisle name (optional - if you have an aisle endpoint)
-            try {
-                const aisleResponse = await API.get(
-                    `/api/aisles/${aisleId}`
-                );
-                setAisleName(aisleResponse.data.aisle || `Aisle ${aisleId}`);
-            } catch (aisleError) {
-                console.error('Error fetching aisle name:', aisleError);
-                setAisleName(`Aisle ${aisleId}`);
-            }
-
-            // 3. Limit and enhance with images
-            const limitedProducts = productsResponse.data.slice(0, 32);
-            const productsWithImages = await Promise.all(
-                limitedProducts.map(async (product) => {
-                    try {
-                        const unsplashResponse = await axios.get(
-                            `https://api.unsplash.com/search/photos`,
-                            {
-                                params: {
-                                    query: product.product_name,
-                                    per_page: 1,
-                                    client_id: ACCESS_KEY
-                                }
-                            }
-                        );
-
-                        return {
-                            ...product,
-                            image: unsplashResponse.data.results[0]?.urls?.small ||
-                                `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
-                            rating: (Math.random() * 2 + 3).toFixed(1)
-                        };
-                    } catch (unsplashError) {
-                        console.error(`Error fetching image for ${product.product_name}:`, unsplashError);
-                        return {
-                            ...product,
-                            image: `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)},grocery`,
-                            rating: (Math.random() * 2 + 3).toFixed(1)
-                        };
-                    }
-                })
+            // Store in localStorage
+            localStorage.setItem(
+                cacheKey,
+                JSON.stringify({ products: productsWithImages, aisleName: aisleNameFetched })
             );
 
             setProducts(productsWithImages);
-        } catch (error) {
-            console.error(`Error fetching products for aisle ${aisleId}:`, error);
+            setAisleName(aisleNameFetched);
+        } catch {
             setProducts([]);
         } finally {
             setLoading(false);
         }
     };
-
-    // ... rest of your existing code (fetchCart, handleAdd, handleRemove, isInCart) remains the same ...
     const fetchCart = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -157,8 +154,8 @@ const ProductsPage = () => {
 
     useEffect(() => {
         fetchAisleProducts();
-        fetchCart();
-    }, [aisleId]); // Changed dependency from departmentId to aisleId
+        // fetchCart();
+    }, [aisleId]);
 
     return (
         <div className="products-page">
