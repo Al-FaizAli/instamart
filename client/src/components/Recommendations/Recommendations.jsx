@@ -4,6 +4,7 @@ import RecommendationCard from './RecommendationCard';
 import './Recommendations.css';
 import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
+
 const Recommendations = () => {
   const { user } = useAuth();
   const [pastRecommendations, setPastRecommendations] = useState([]);
@@ -13,35 +14,23 @@ const Recommendations = () => {
   const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  // Load cached recommendations on mount
-  useEffect(() => {
-    if (!user?.userId) return;
-
+  // Helper to get cached recommendations
+  const getCached = useCallback(() => {
+    if (!user?.userId) return { past: [], our: [] };
     const cachedPast = localStorage.getItem(`pastRecommendations_${user.userId}`);
     const cachedOur = localStorage.getItem(`ourRecommendations_${user.userId}`);
-
-    if (cachedPast && cachedOur) {
-      setPastRecommendations(JSON.parse(cachedPast));
-      setOurRecommendations(JSON.parse(cachedOur));
-      setLoading(false);
-      // Only fetch if you want to refresh, or provide a manual refresh button
-      return;
-    }
-
-    // If not cached, fetch from API
-    setLoading(true);
-    fetchRecommendations()
-      .catch((err) => setError('Failed to load recommendations.'))
-      .finally(() => setLoading(false));
+    return {
+      past: cachedPast ? JSON.parse(cachedPast) : [],
+      our: cachedOur ? JSON.parse(cachedOur) : []
+    };
   }, [user?.userId]);
-  
+
+  // Helper to fetch Unsplash images
   const fetchUnsplashImages = useCallback(async (query, count) => {
     try {
       if (!UNSPLASH_ACCESS_KEY) {
-        console.warn('Unsplash API key not found, using placeholders');
         return Array(count).fill({ urls: { regular: '/images/placeholder.jpg' } });
       }
-
       const response = await axios.get(
         `https://api.unsplash.com/search/photos`,
         {
@@ -56,24 +45,35 @@ const Recommendations = () => {
         }
       );
       return response.data.results;
-    } catch (err) {
-      console.error('Error fetching Unsplash images:', err);
+    } catch {
       return Array(count).fill({ urls: { regular: '/images/placeholder.jpg' } });
     }
   }, [UNSPLASH_ACCESS_KEY]);
 
-  const fetchRecommendations = useCallback(async () => {
-    // setLoading(true);
+  // Main fetch logic
+  const fetchRecommendations = useCallback(async (force = false) => {
     setError(null);
-
     if (!user?.userId) {
       setError('Please log in to see recommendations.');
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+
+    // 1. Try cache first (unless force refresh)
+    if (!force) {
+      const { past, our } = getCached();
+      if (past.length > 0 && our.length > 0) {
+        setPastRecommendations(past);
+        setOurRecommendations(our);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 2. Fetch from API if cache is missing or force is true
     try {
-      // Fetch product data
       const [pastResponse, ourResponse] = await Promise.all([
         axios.get(`https://past-recommendations.onrender.com/recommend/past`, {
           params: { user_id: user.userId }
@@ -83,11 +83,9 @@ const Recommendations = () => {
         })
       ]);
 
-      // Check cache for images
-      const cachedPast = JSON.parse(localStorage.getItem(`pastRecommendations_${user.userId}`) || "[]");
-      const cachedOur = JSON.parse(localStorage.getItem(`ourRecommendations_${user.userId}`) || "[]");
+      // Get cached images for deduplication
+      const { past: cachedPast, our: cachedOur } = getCached();
 
-      // Helper to find cached image for a product
       const getCachedImage = (productName, cachedArr) => {
         const found = cachedArr.find(p => p.name === productName);
         return found ? found.image : null;
@@ -101,13 +99,12 @@ const Recommendations = () => {
         p => !getCachedImage(p.product, cachedOur)
       );
 
-      // Fetch only needed images
       const [pastImages, ourImages] = await Promise.all([
         fetchUnsplashImages('grocery items', pastImagesNeeded.length),
         fetchUnsplashImages('healthy food', ourImagesNeeded.length)
       ]);
 
-      // Build past recommendations with cached or new images
+      // Build past recommendations
       let past = pastResponse.data.map((product, index) => {
         const cachedImage = getCachedImage(product.product, cachedPast);
         let image, alt;
@@ -131,7 +128,7 @@ const Recommendations = () => {
         };
       });
 
-      // Build our recommendations with cached or new images
+      // Build our recommendations
       let our = ourResponse.data.map((product, index) => {
         const cachedImage = getCachedImage(product.product, cachedOur);
         let image, alt;
@@ -161,19 +158,29 @@ const Recommendations = () => {
       // Cache to localStorage
       localStorage.setItem(`pastRecommendations_${user.userId}`, JSON.stringify(past));
       localStorage.setItem(`ourRecommendations_${user.userId}`, JSON.stringify(our));
-
     } catch (err) {
-      console.error('Error:', err);
-      setError(err.response?.data?.message || 'Failed to load recommendations.');
-      setPastRecommendations([]);
-      setOurRecommendations([]);
+      // On error, try to show cache if available
+      const { past, our } = getCached();
+      if (past.length > 0 || our.length > 0) {
+        setPastRecommendations(past);
+        setOurRecommendations(our);
+        setError('Showing cached recommendations. Some data may be outdated.');
+      } else {
+        setPastRecommendations([]);
+        setOurRecommendations([]);
+        setError('Failed to load recommendations.');
+      }
     } finally {
       setLoading(false);
     }
-  }, [user, fetchUnsplashImages]);
+  }, [user, fetchUnsplashImages, getCached]);
+
+  // On mount, load from cache or fetch if missing
   useEffect(() => {
+    if (!user?.userId) return;
     fetchRecommendations();
-  }, [fetchRecommendations]);
+    // eslint-disable-next-line
+  }, [user?.userId]);
 
   if (loading) {
     return (
@@ -184,7 +191,7 @@ const Recommendations = () => {
     );
   }
 
-  if (error) {
+  if (error && pastRecommendations.length === 0 && ourRecommendations.length === 0) {
     return (
       <div className="error-container-recommendation">
         <p className="error-message">{error}</p>
@@ -201,13 +208,15 @@ const Recommendations = () => {
             )}
           </>
         ) : (
-          <button onClick={fetchRecommendations} className="retry-button">
+          <button onClick={() => fetchRecommendations(true)} className="retry-button">
             Retry
           </button>
         )}
       </div>
     );
-  } return (
+  }
+
+  return (
     <div className="recommendations-container">
       <section className="recommendation-section">
         <h2>Your Past Products</h2>
@@ -234,6 +243,7 @@ const Recommendations = () => {
           )}
         </div>
       </section>
+      {error && <div className="cache-warning">{error}</div>}
     </div>
   );
 };
