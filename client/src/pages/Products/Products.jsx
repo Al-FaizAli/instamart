@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import API from '../../api';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 import './Products.css'
+import { fetchUnsplashImage } from '../../utils/fetchUnsplashImage';
 import { FiSearch, FiFilter } from 'react-icons/fi';
 import { IoIosArrowForward } from 'react-icons/io';
 
@@ -12,23 +13,8 @@ const ProductsPage = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState([]);
-    const [aisleName, setAisleName] = useState(''); // Changed from departmentName to aisleName
-    const aisleCache = useRef({}); // In-memory cache for this session
-
-    const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-
-    // Helper to fetch Unsplash image for a product
-    const fetchUnsplashImage = async (query) => {
-        try {
-            const res = await fetch(
-                `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${ACCESS_KEY}`
-            );
-            const data = await res.json();
-            return data.results?.[0]?.urls?.small || '/placeholder.png';
-        } catch {
-            return '/placeholder.png';
-        }
-    };
+    const [aisleName, setAisleName] = useState('');
+    const aisleCache = useRef({});
 
     const fetchAisleProducts = async () => {
         setLoading(true);

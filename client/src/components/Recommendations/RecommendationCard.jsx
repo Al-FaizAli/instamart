@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './RecommendationCard.css';
 
-const RecommendationCard = React.memo(({ product, type = 'past' }) => {
+const RecommendationCard = React.memo(({ product, type = 'past', onAddToCart }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [currentImage, setCurrentImage] = useState('/images/placeholder.jpg');
 
@@ -65,7 +65,10 @@ const RecommendationCard = React.memo(({ product, type = 'past' }) => {
           <span className="rating-value">{product.rating.toFixed(1)}</span>
         </div>
         <p className="product-category">{product.category}</p>
-        <button className="add-button">
+        <button
+          className="add-button"
+          onClick={() => onAddToCart && onAddToCart(product)}
+        >
           {type === 'past' ? 'Buy Again' : 'Add to Cart'}
         </button>
       </div>

@@ -1,10 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import "./Aisles.css";
-
-const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-const UNSPLASH_API = "https://api.unsplash.com/search/photos";
+import { fetchUnsplashImage } from '../../utils/fetchUnsplashImage';
 
 const TOP_AISLES = [
   { id: 45, name: "candy chocolate" },
@@ -31,6 +28,8 @@ const capitalizeWords = (str) => {
   ).join(' ');
 };
 
+const CACHE_KEY = "aisleImagesCache_v1";
+
 const Aisles = () => {
   const [aisles, setAisles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,28 +39,39 @@ const Aisles = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // 1. Load cache from localStorage
+        let cache = {};
+        try {
+          cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
+        } catch {
+          cache = {};
+        }
+
+        // 2. For each aisle, use cached image or fetch new one
         const aislesWithImages = await Promise.all(
           TOP_AISLES.map(async (aisle) => {
+            if (cache[aisle.id]) {
+              return { ...aisle, image: cache[aisle.id] };
+            }
             try {
-              const response = await axios.get(
-                `${UNSPLASH_API}?query=${encodeURIComponent(aisle.name)}&client_id=${ACCESS_KEY}&per_page=1`
+              const image = await fetchUnsplashImage(
+                aisle.name,
+                `https://source.unsplash.com/random/300x200/?${encodeURIComponent(aisle.name)},grocery`
               );
-
-              return {
-                ...aisle,
-                image: response.data.results[0]?.urls?.small ||
-                  `https://source.unsplash.com/random/300x200/?${encodeURIComponent(aisle.name)},grocery`
-              };
+              // Save to cache
+              cache[aisle.id] = image;
+              return { ...aisle, image };
             } catch (unsplashError) {
               console.error(`Error fetching image for ${aisle.name}:`, unsplashError);
-              return {
-                ...aisle,
-                image: `https://source.unsplash.com/random/300x200/?${encodeURIComponent(aisle.name)},grocery`
-              };
+              const fallback = `https://source.unsplash.com/random/300x200/?${encodeURIComponent(aisle.name)},grocery`;
+              cache[aisle.id] = fallback;
+              return { ...aisle, image: fallback };
             }
           })
         );
 
+        // 3. Save updated cache
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
         setAisles(aislesWithImages);
         setLoading(false);
       } catch (err) {
