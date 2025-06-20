@@ -4,6 +4,7 @@ import axios from 'axios';
 import './SearchResults.css';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 import API from '../../api';
+import { fetchUnsplashImage } from '../../utils/fetchUnsplashImage';
 
 const SearchResults = () => {
     const [products, setProducts] = useState([]);
@@ -12,7 +13,6 @@ const SearchResults = () => {
     const [cart, setCart] = useState([]);
     const location = useLocation();
     const navigate = useNavigate();
-    const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
     const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
 
 
@@ -72,7 +72,7 @@ const SearchResults = () => {
             const productsWithImages = await Promise.all(
                 detailsResponse.data.map(async (product) => {
                     try {
-                        const imageUrl = await fetchProductImage(product.product_name);
+                        const imageUrl = await fetchUnsplashImage(product.product_name);
                         return {
                             ...product,
                             image: imageUrl,
@@ -95,22 +95,6 @@ const SearchResults = () => {
             setError(err.response?.data?.message || 'Failed to fetch search results');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchProductImage = async (productName) => {
-        try {
-            const response = await axios.get('https://api.unsplash.com/search/photos', {
-                params: {
-                    query: productName,
-                    per_page: 1,
-                    client_id: ACCESS_KEY
-                }
-            });
-            return response.data.results[0]?.urls?.small;
-        } catch (err) {
-            console.error('Unsplash error:', err);
-            return `https://source.unsplash.com/random/300x200/?${encodeURIComponent(productName)}`;
         }
     };
 
@@ -152,7 +136,7 @@ const SearchResults = () => {
 
             await axios.post('http://localhost:5000/api/cart/add',
                 {
-                    productId: product.product_id,
+                    product_id: product.product_id,
                     name: product.product_name,
                     price: product.price || 10.99,
                     image: product.image,

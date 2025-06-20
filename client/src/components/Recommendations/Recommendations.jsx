@@ -4,15 +4,15 @@ import RecommendationCard from './RecommendationCard';
 import './Recommendations.css';
 import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
-
+import { fetchUnsplashImages } from '../../utils/fetchUnsplashImage';
 const Recommendations = () => {
   const { user } = useAuth();
   const [pastRecommendations, setPastRecommendations] = useState([]);
   const [ourRecommendations, setOurRecommendations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
 
   // Helper to get cached recommendations
   const getCached = useCallback(() => {
@@ -24,31 +24,6 @@ const Recommendations = () => {
       our: cachedOur ? JSON.parse(cachedOur) : []
     };
   }, [user?.userId]);
-
-  // Helper to fetch Unsplash images
-  const fetchUnsplashImages = useCallback(async (query, count) => {
-    try {
-      if (!UNSPLASH_ACCESS_KEY) {
-        return Array(count).fill({ urls: { regular: '/images/placeholder.jpg' } });
-      }
-      const response = await axios.get(
-        `https://api.unsplash.com/search/photos`,
-        {
-          params: {
-            query: query,
-            per_page: count,
-            orientation: 'squarish'
-          },
-          headers: {
-            Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
-          }
-        }
-      );
-      return response.data.results;
-    } catch {
-      return Array(count).fill({ urls: { regular: '/images/placeholder.jpg' } });
-    }
-  }, [UNSPLASH_ACCESS_KEY]);
 
   // Main fetch logic
   const fetchRecommendations = useCallback(async (force = false) => {
@@ -175,6 +150,43 @@ const Recommendations = () => {
     }
   }, [user, fetchUnsplashImages, getCached]);
 
+
+  // Add to cart logic
+  const handleAddToCart = async (product) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setCartMessage('Please login to add items to cart');
+        setIsLoginOpen(true);
+        return;
+      }
+
+      // Use product fields, fallback to alternatives if needed
+      await axios.post(
+        'http://localhost:5000/api/cart/add',
+        {
+          product_id: product.product_id,
+          name: product.product_name,
+          price: product.price || 10.99,
+          image: product.image,
+          quantity: 1
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      setCartMessage(`${product.product_name || product.name} added to cart!`);
+      setTimeout(() => setCartMessage(''), 2000);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setCartMessage(error.response?.data?.error || 'Failed to add to cart');
+      setTimeout(() => setCartMessage(''), 2000);
+    }
+  };
   // On mount, load from cache or fetch if missing
   useEffect(() => {
     if (!user?.userId) return;
@@ -191,12 +203,12 @@ const Recommendations = () => {
     );
   }
 
-  if (error && pastRecommendations.length === 0 && ourRecommendations.length === 0) {
+  if (!user?.userId || error && pastRecommendations.length === 0 && ourRecommendations.length === 0) {
     return (
       <div className="error-container-recommendation">
-        <p className="error-message">{error}</p>
         {!user?.userId ? (
           <>
+            <p className="error-message">Please log in to see recommendations.</p>
             <button
               className="login-button"
               onClick={() => setIsLoginOpen(true)}
@@ -208,9 +220,12 @@ const Recommendations = () => {
             )}
           </>
         ) : (
-          <button onClick={() => fetchRecommendations(true)} className="retry-button">
-            Retry
-          </button>
+          <>
+            <p className="error-message">{error}</p>
+            <button onClick={() => fetchRecommendations(true)} className="retry-button">
+              Retry
+            </button>
+          </>
         )}
       </div>
     );
@@ -218,12 +233,20 @@ const Recommendations = () => {
 
   return (
     <div className="recommendations-container">
+      {cartMessage && (
+        <div className="cart-message">{cartMessage}</div>
+      )}
       <section className="recommendation-section">
         <h2>Your Past Products</h2>
         <div className="scrollable-container">
           {pastRecommendations.length > 0 ? (
             pastRecommendations.map((product) => (
-              <RecommendationCard key={product.id} product={product} type="past" />
+              <RecommendationCard
+                key={product.id}
+                product={product}
+                type="past"
+                onAddToCart={handleAddToCart}
+              />
             ))
           ) : (
             <p className="no-items">No past products found.</p>
@@ -236,7 +259,12 @@ const Recommendations = () => {
         <div className="scrollable-container">
           {ourRecommendations.length > 0 ? (
             ourRecommendations.map((product) => (
-              <RecommendationCard key={product.id} product={product} type="our" />
+              <RecommendationCard
+                key={product.id}
+                product={product}
+                type="our"
+                onAddToCart={handleAddToCart}
+              />
             ))
           ) : (
             <p className="no-items">No recommendations available.</p>
