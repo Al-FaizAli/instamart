@@ -1,139 +1,49 @@
-/* Recommendations.css */
-.recommendations-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.recommendation-section {
-  margin-bottom: 40px;
-}
-
-.recommendation-section h2 {
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.scrollable-container {
-  display: flex;
-  overflow-x: auto;
-  padding: 10px 0;
-  gap: 20px;
-  scrollbar-width: thin;
-}
-
-.scrollable-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.scrollable-container::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 3px;
-}
-
-.no-items {
-  color: #666;
-  padding: 20px;
-  text-align: center;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-}
-
-.loading-spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  border-top: 4px solid #4CAF50;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.error-container-recommendation{
-  text-align: center;
-  padding: 20px;
-}
-
-.error-message {
-  color: #d32f2f;
-  margin-bottom: 15px;
-}
-
-.retry-button,.login-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.retry-button,.login-button:hover {
-  background: #388E3C;
-}
-
 /* RecommendationCard.css */
 .recommendation-card {
-  width: 250px;
+  width: 240px;
   min-height: 380px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  background: white;
+  background: var(--surface);
+  border: 1px solid var(--gray-200);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  transition: all var(--transition-base);
+}
+
+.recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
 }
 
 .product-image-container {
   position: relative;
   height: 160px;
   overflow: hidden;
+  background: var(--gray-100);
 }
 
 .image-skeleton {
   width: 100%;
   height: 100%;
-  background: #f5f5f5;
+  background: var(--gray-100);
   position: relative;
   overflow: hidden;
 }
 
 .skeleton-animation {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%);
+  inset: 0;
+  background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .product-image {
@@ -156,12 +66,12 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #4CAF50;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
 }
-
-/* Rest of your existing card styles... */

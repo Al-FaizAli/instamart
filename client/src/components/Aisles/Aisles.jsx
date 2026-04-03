@@ -1,25 +1,24 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Aisles.css";
-import { fetchUnsplashImage } from '../../utils/fetchUnsplashImage';
 
 const TOP_AISLES = [
-  { id: 45, name: "candy chocolate" },
-  { id: 37, name: "ice cream ice" },
-  { id: 47, name: "vitamins supplements" },
-  { id: 120, name: "yogurt" },
-  { id: 107, name: "chips pretzels" },
-  { id: 94, name: "tea" },
-  { id: 21, name: "packaged cheese" },
-  { id: 38, name: "frozen meals" },
-  { id: 61, name: "cookies cakes" },
-  { id: 3, name: "energy granola bars" },
-  { id: 22, name: "hair care" },
-  { id: 104, name: "spices seasonings" },
-  { id: 98, name: "juice nectars" },
-  { id: 78, name: "crackers" },
-  { id: 69, name: "soup broth bouillon" },
-  { id: 92, name: "baby food formula" }
+  { id: 45, name: "candy chocolate", emoji: "🍫", gradient: "linear-gradient(135deg, #8B5CF6, #6D28D9)" },
+  { id: 37, name: "ice cream ice", emoji: "🍦", gradient: "linear-gradient(135deg, #EC4899, #DB2777)" },
+  { id: 47, name: "vitamins supplements", emoji: "💊", gradient: "linear-gradient(135deg, #10B981, #059669)" },
+  { id: 120, name: "yogurt", emoji: "🥛", gradient: "linear-gradient(135deg, #F59E0B, #D97706)" },
+  { id: 107, name: "chips pretzels", emoji: "🥨", gradient: "linear-gradient(135deg, #EF4444, #DC2626)" },
+  { id: 94, name: "tea", emoji: "🍵", gradient: "linear-gradient(135deg, #14B8A6, #0D9488)" },
+  { id: 21, name: "packaged cheese", emoji: "🧀", gradient: "linear-gradient(135deg, #F97316, #EA580C)" },
+  { id: 38, name: "frozen meals", emoji: "🧊", gradient: "linear-gradient(135deg, #3B82F6, #2563EB)" },
+  { id: 61, name: "cookies cakes", emoji: "🍪", gradient: "linear-gradient(135deg, #A855F7, #9333EA)" },
+  { id: 3, name: "energy granola bars", emoji: "🥜", gradient: "linear-gradient(135deg, #84CC16, #65A30D)" },
+  { id: 22, name: "hair care", emoji: "💆", gradient: "linear-gradient(135deg, #06B6D4, #0891B2)" },
+  { id: 104, name: "spices seasonings", emoji: "🌶️", gradient: "linear-gradient(135deg, #F43F5E, #E11D48)" },
+  { id: 98, name: "juice nectars", emoji: "🧃", gradient: "linear-gradient(135deg, #FB923C, #EA580C)" },
+  { id: 78, name: "crackers", emoji: "🍘", gradient: "linear-gradient(135deg, #FBBF24, #D97706)" },
+  { id: 69, name: "soup broth bouillon", emoji: "🍲", gradient: "linear-gradient(135deg, #22D3EE, #06B6D4)" },
+  { id: 92, name: "baby food formula", emoji: "🍼", gradient: "linear-gradient(135deg, #C084FC, #A855F7)" }
 ];
 
 const capitalizeWords = (str) => {
@@ -28,101 +27,33 @@ const capitalizeWords = (str) => {
   ).join(' ');
 };
 
-const CACHE_KEY = "aisleImagesCache_v1";
-
 const Aisles = () => {
-  const [aisles, setAisles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // 1. Load cache from localStorage
-        let cache = {};
-        try {
-          cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || {};
-        } catch {
-          cache = {};
-        }
-
-        // 2. For each aisle, use cached image or fetch new one
-        const aislesWithImages = await Promise.all(
-          TOP_AISLES.map(async (aisle) => {
-            if (cache[aisle.id]) {
-              return { ...aisle, image: cache[aisle.id] };
-            }
-            try {
-              const image = await fetchUnsplashImage(
-                aisle.name,
-                `https://source.unsplash.com/random/300x200/?${encodeURIComponent(aisle.name)},grocery`
-              );
-              // Save to cache
-              cache[aisle.id] = image;
-              return { ...aisle, image };
-            } catch (unsplashError) {
-              console.error(`Error fetching image for ${aisle.name}:`, unsplashError);
-              const fallback = `https://source.unsplash.com/random/300x200/?${encodeURIComponent(aisle.name)},grocery`;
-              cache[aisle.id] = fallback;
-              return { ...aisle, image: fallback };
-            }
-          })
-        );
-
-        // 3. Save updated cache
-        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-        setAisles(aislesWithImages);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  const handleImageLoad = () => {
-    setImagesLoaded(prev => prev + 1);
-  };
-
-  if (loading) return (
-    <div className="loading-container">
-      <div className="loading-spinner"></div>
-      <p>Loading aisles...</p>
-    </div>
-  );
-
-  if (error) return (
-    <div className="error-container">
-      <p>Error loading aisles: {error}</p>
-      <button onClick={() => window.location.reload()}>Try Again</button>
-    </div>
-  );
+  const [hoveredId, setHoveredId] = useState(null);
 
   return (
     <div className="aisles-section">
-      <h2 className="aisles-heading">Popular Aisles</h2>
+      <div className="aisles-header">
+        <h2 className="aisles-heading">Popular Aisles</h2>
+        <p className="aisles-subtitle">Browse your favorite categories</p>
+      </div>
       <div className="aisles-container">
-        {aisles.map((aisle) => (
+        {TOP_AISLES.map((aisle) => (
           <Link
             key={aisle.id}
             to={`/aisle/${aisle.id}`}
             className="aisle-link"
+            onMouseEnter={() => setHoveredId(aisle.id)}
+            onMouseLeave={() => setHoveredId(null)}
           >
-            <div className="aisle-card">
-              <div className="aisle-image-container">
-                <img
-                  src={aisle.image}
-                  alt={aisle.name}
-                  className="aisle-image"
-                  loading="lazy"
-                  onLoad={handleImageLoad}
-                />
-                {imagesLoaded < aisles.length && (
-                  <div className="image-placeholder"></div>
-                )}
+            <div className={`aisle-card ${hoveredId === aisle.id ? 'hovered' : ''}`}>
+              <div
+                className="aisle-icon-container"
+                style={{ background: aisle.gradient }}
+              >
+                <span className="aisle-emoji" role="img" aria-label={aisle.name}>
+                  {aisle.emoji}
+                </span>
+                <div className="aisle-icon-glow"></div>
               </div>
               <div className="aisle-info">
                 <h3 className="aisle-name">{capitalizeWords(aisle.name)}</h3>

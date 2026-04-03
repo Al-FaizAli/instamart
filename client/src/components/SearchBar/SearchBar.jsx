@@ -4,6 +4,20 @@ import axios from 'axios';
 import './SearchBar.css';
 import API from '../../api';
 
+const AVATAR_COLORS = [
+    '#8B5CF6', '#EC4899', '#10B981', '#F59E0B',
+    '#EF4444', '#3B82F6', '#14B8A6', '#F97316',
+    '#A855F7', '#06B6D4', '#84CC16', '#E11D48'
+];
+
+const getInitialColor = (name) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
 const SearchBar = () => {
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
@@ -47,11 +61,8 @@ const SearchBar = () => {
                         `/api/products/by-ids?ids=${productIds.join(',')}`
                     );
 
-                    // Limit to 10 suggestions and format them
-                    const limitedSuggestions = detailsResponse.data.slice(0, 10).map(product => ({
-                        ...product,
-                        image: product.image || `https://source.unsplash.com/random/300x200/?${encodeURIComponent(product.product_name)}`
-                    }));
+                    // Limit to 10 suggestions
+                    const limitedSuggestions = detailsResponse.data.slice(0, 10);
 
                     setSuggestions(limitedSuggestions);
                 } catch (error) {
@@ -139,11 +150,12 @@ const SearchBar = () => {
                                 className="suggestion-item"
                                 onClick={() => handleSuggestionClick(product.product_id, product.product_name)}
                             >
-                                <img
-                                    src={product.image}
-                                    alt={product.product_name}
-                                    className="suggestion-image"
-                                />
+                                <div
+                                    className="suggestion-avatar"
+                                    style={{ background: getInitialColor(product.product_name) }}
+                                >
+                                    {product.product_name.charAt(0).toUpperCase()}
+                                </div>
                                 <div className="suggestion-text">
                                     <div className="suggestion-name">{product.product_name}</div>
                                     {product.price && (

@@ -1,24 +1,28 @@
 .recommendations-container {
-  padding: 1rem;
+  padding: 1rem 0;
   margin: 1rem 0;
 }
 
 .recommendation-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .recommendation-section h2 {
-  color: #2e7d32;
-  margin-bottom: 0.8rem;
-  font-size: 1.3rem;
-  padding-left: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin-bottom: 1rem;
+  padding-bottom: 0;
+  border-bottom: none;
+  letter-spacing: -0.3px;
 }
 
 .scrollable-container {
   display: flex;
   overflow-x: auto;
   gap: 1rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -28,28 +32,35 @@
 }
 
 .recommendation-card {
-  min-width: 160px;
-  max-width: 160px;
-  border-radius: 8px;
+  min-width: 200px;
+  max-width: 200px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  background: white;
+  background: var(--surface);
+  border: 1px solid var(--gray-200);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  transition: all var(--transition-base);
+}
+
+.recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
 }
 
 .recommendation-card.past {
-  border-top: 3px solid #4a90e2;
+  border-top: 3px solid #3B82F6;
 }
 
 .recommendation-card.our {
-  border-top: 3px solid #ff9800;
+  border-top: 3px solid var(--accent);
 }
 
 .product-image {
   width: 100%;
-  height: 120px;
+  height: 140px;
   object-fit: cover;
 }
 
@@ -62,8 +73,9 @@
 
 .product-name {
   margin: 0 0 0.3rem 0;
-  font-size: 0.9rem;
-  color: #333;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gray-800);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -71,77 +83,136 @@
 
 .product-price {
   margin: 0 0 0.3rem 0;
-  font-weight: bold;
-  color: #2e7d32;
+  font-weight: 700;
+  color: var(--primary);
   font-size: 1rem;
 }
 
 .product-rating {
   margin: 0 0 0.3rem 0;
   font-size: 0.8rem;
-  color: #ffc107;
+  color: var(--accent);
 }
 
 .product-category {
   margin: 0 0 0.5rem 0;
   font-size: 0.7rem;
-  color: #666;
+  color: var(--gray-500);
   text-transform: capitalize;
 }
 
 .add-button {
-  background: #2e7d32;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   border: none;
-  padding: 0.4rem;
-  border-radius: 4px;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.8rem;
-  font-weight: bold;
+  font-weight: 600;
   margin-top: auto;
+  font-family: var(--font-body);
+  transition: var(--transition-fast);
+}
+
+.add-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .loading-message {
   text-align: center;
   padding: 1.5rem;
   font-size: 1rem;
-  color: #666;
+  color: var(--gray-500);
+}
+
+.error-container-recommendation {
+  text-align: center;
+  padding: 2rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  margin: 2rem 0;
+}
+
+.error-message {
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.retry-button, .login-button {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition: var(--transition-fast);
+}
+
+.retry-button:hover, .login-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.cart-message {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gray-900);
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 2000;
+  box-shadow: var(--shadow-xl);
+  animation: toastIn 0.3s ease;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.cache-warning {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  margin-top: 1rem;
 }
 
 @media (min-width: 600px) {
   .recommendation-card {
-    min-width: 180px;
-    max-width: 180px;
-  }
-
-  .product-image {
-    height: 140px;
+    min-width: 220px;
+    max-width: 220px;
   }
 }
 
 @media (min-width: 900px) {
   .recommendations-container {
-    padding: 1rem 2rem;
+    padding: 1rem 0;
   }
 
   .recommendation-card {
-    min-width: 200px;
-    max-width: 200px;
+    min-width: 240px;
+    max-width: 240px;
   }
 
   .product-image {
-    height: 150px;
+    height: 160px;
   }
+}
 
-  .recommendation-section h2 {
-    font-size: 1.5rem;
-  }
-}
-h2{
-  margin-bottom: 25px;
-  padding-bottom: 8px;
-  color: #2e7d32;
-  margin-bottom: 0.8rem;
-  font-size: 1.5rem;
-  border-bottom: 2px solid #2e7d32;
-}
+/* Global h2 override removed — was causing issues */

@@ -1,26 +1,30 @@
 .footer {
-    background-color: #f8f9fa; /* Light background to match the website */
-    color: #333; /* Dark text for contrast */
-    padding: 30px 20px;
-    text-align: center;
-    font-family: 'Arial', sans-serif;
-    border-top: 2px solid #28a745; /* Green border to match the website theme */
+    background: var(--gray-900);
+    color: var(--gray-300);
+    padding: 3rem 2rem 2rem;
+    margin-top: 3rem;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .footer-content {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+    justify-content: space-between;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
 .contributors h4,
 .social-media h4 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 14px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #28a745; /* Green heading color */
+    letter-spacing: 1.5px;
+    color: var(--primary-light);
 }
 
 .contributors ul {
@@ -30,35 +34,68 @@
 }
 
 .contributors ul li {
-    font-size: 0.9rem;
-    margin: 5px 0;
-    color: #555; /* Subtle text color */
+    font-size: 0.88rem;
+    margin: 6px 0;
+    color: var(--gray-400);
+    transition: var(--transition-fast);
+}
+
+.contributors ul li:hover {
+    color: var(--gray-200);
 }
 
 .social-media .social-icons {
     display: flex;
-    gap: 15px;
+    gap: 12px;
 }
 
 .social-media .social-icons a {
-    color: #28a745; /* Green icon color */
-    font-size: 1.5rem;
-    transition: transform 0.3s ease, color 0.3s ease;
+    color: var(--gray-400);
+    font-size: 1.2rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-fast);
 }
 
 .social-media .social-icons a:hover {
-    transform: scale(1.2);
-    color: #155724; /* Darker green on hover */
+    transform: translateY(-2px);
+    color: var(--primary-light);
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.copyright {
+    text-align: center;
+    width: 100%;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .copyright p {
-    font-size: 0.9rem;
-    margin: 5px 0;
-    color: #666; /* Subtle text color */
-    opacity: 0.9;
+    font-size: 0.85rem;
+    margin: 4px 0;
+    color: var(--gray-500);
 }
 
 .copyright p:last-child {
-    font-size: 0.85rem;
-    color: #28a745; /* Green for the "Made with ❤️" text */
+    color: var(--primary-light);
+}
+
+@media (max-width: 768px) {
+    .footer {
+        padding: 2rem 1.5rem 1.5rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
 }
