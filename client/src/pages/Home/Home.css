@@ -1,3 +1,5 @@
-.home{
-    margin: min(10px,3vw) min(85px,8vw);
+.home {
+    margin: 0 auto;
+    padding: 0 clamp(16px, 5vw, 80px);
+    max-width: 1600px;
 }
