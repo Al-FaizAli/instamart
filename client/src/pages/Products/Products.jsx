@@ -1,20 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import API from '../../api';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 import './Products.css'
-import { fetchUnsplashImage } from '../../utils/fetchUnsplashImage';
-import { FiSearch, FiFilter } from 'react-icons/fi';
-import { IoIosArrowForward } from 'react-icons/io';
+import { normalizeProducts } from '../../utils/productHelpers';
 
 const ProductsPage = () => {
-    const { aisleId } = useParams(); // Changed from departmentId to aisleId
+    const { aisleId } = useParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState([]);
     const [aisleName, setAisleName] = useState('');
-    const aisleCache = useRef({});
 
     const fetchAisleProducts = async () => {
         setLoading(true);
@@ -24,13 +20,12 @@ const ProductsPage = () => {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
             const { products, aisleName } = JSON.parse(cached);
-            setProducts(products);
+            setProducts(normalizeProducts(products));
             setAisleName(aisleName);
             setLoading(false);
             return;
         }
 
-        // 2. If not cached, fetch from backend and Unsplash
         try {
             const productsRes = await API.get(`/api/products/aisle/${aisleId}`);
             let aisleNameFetched = `Aisle ${aisleId}`;
@@ -39,21 +34,14 @@ const ProductsPage = () => {
                 aisleNameFetched = aisleRes.data.aisle || aisleNameFetched;
             } catch { }
 
-            const productsWithImages = await Promise.all(
-                productsRes.data.slice(0, 32).map(async (product) => ({
-                    ...product,
-                    image: await fetchUnsplashImage(product.product_name),
-                    rating: (Math.random() * 2 + 3).toFixed(1)
-                }))
-            );
+            const normalizedProducts = normalizeProducts(productsRes.data.slice(0, 32));
 
-            // Store in localStorage
             localStorage.setItem(
                 cacheKey,
-                JSON.stringify({ products: productsWithImages, aisleName: aisleNameFetched })
+                JSON.stringify({ products: normalizedProducts, aisleName: aisleNameFetched })
             );
 
-            setProducts(productsWithImages);
+            setProducts(normalizedProducts);
             setAisleName(aisleNameFetched);
         } catch {
             setProducts([]);
@@ -66,12 +54,8 @@ const ProductsPage = () => {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await axios.get('http://localhost:5000/api/cart', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            setCart(response.data.cart?.items || []);
+            const response = await API.get('/api/cart');
+            setCart(response.data.cart || []);
         } catch (error) {
             console.error('Error fetching cart:', error);
         }
@@ -88,17 +72,13 @@ const ProductsPage = () => {
             const product = products.find(p => p.product_id === productId);
             if (!product) return;
 
-            await axios.post('http://localhost:5000/api/cart/add',
+            await API.post('/api/cart/add',
                 {
                     product_id: product.product_id,
-                    name: product.product_name,
-                    price: product.price || 10.99,
-                    image: product.image,
                     quantity: 1
                 },
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 }
@@ -108,7 +88,7 @@ const ProductsPage = () => {
             alert(`${product.product_name} added to cart!`);
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert(error.response?.data?.error || 'Failed to add to cart');
+            alert(error.response?.data?.message || 'Failed to add to cart');
         }
     };
 
@@ -120,27 +100,23 @@ const ProductsPage = () => {
                 return;
             }
 
-            await axios.delete(`http://localhost:5000/api/cart/remove/${productId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            await API.delete(`/api/cart/${productId}`);
 
             await fetchCart();
             alert('Item removed from cart');
         } catch (error) {
             console.error('Error removing from cart:', error);
-            alert(error.response?.data?.error || 'Failed to remove from cart');
+            alert(error.response?.data?.message || 'Failed to remove from cart');
         }
     };
 
     const isInCart = (productId) => {
-        return cart.some(item => item.product.productId === productId);
+        return cart.some(item => item.product_id === productId);
     };
 
     useEffect(() => {
         fetchAisleProducts();
-        // fetchCart();
+        fetchCart();
     }, [aisleId]);
 
     return (

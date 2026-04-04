@@ -158,8 +158,8 @@ const SearchBar = () => {
                                 </div>
                                 <div className="suggestion-text">
                                     <div className="suggestion-name">{product.product_name}</div>
-                                    {product.price && (
-                                        <div className="suggestion-price">${product.price.toFixed(2)}</div>
+                                    {Number.isFinite(Number(product.price)) && (
+                                        <div className="suggestion-price">${Number(product.price).toFixed(2)}</div>
                                     )}
                                 </div>
                             </div>

@@ -90,3 +90,37 @@ export const searchProducts = async (req, res) => {
         res.status(500).json({ message: 'Failed to search products' });
     }
 };
+
+// @desc    Get products by names
+// @route   POST /api/products/by-names
+// @access  Public
+export const getProductsByNames = async (req, res) => {
+    try {
+        const names = Array.isArray(req.body?.names)
+            ? req.body.names
+                .map((name) => String(name).trim())
+                .filter(Boolean)
+            : [];
+
+        if (names.length === 0) {
+            return res.json([]);
+        }
+
+        const products = await Product.find({
+            product_name: { $in: names }
+        });
+
+        const productMap = new Map();
+        products.forEach((product) => {
+            productMap.set(product.product_name.toLowerCase(), product);
+        });
+
+        const orderedProducts = names
+            .map((name) => productMap.get(name.toLowerCase()))
+            .filter(Boolean);
+
+        res.json(orderedProducts);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch products by names' });
+    }
+};

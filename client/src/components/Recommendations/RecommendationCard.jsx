@@ -1,27 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import './RecommendationCard.css';
+import { PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/productHelpers';
 
 const RecommendationCard = React.memo(({ product, type = 'past', onAddToCart }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [currentImage, setCurrentImage] = useState('/images/placeholder.jpg');
+  const [currentImage, setCurrentImage] = useState(PRODUCT_PLACEHOLDER_IMAGE);
+  const imageSrc = product.image_link || product.image || PRODUCT_PLACEHOLDER_IMAGE;
+  const rating = Number(product.rating) || 4.2;
 
   useEffect(() => {
     let isMounted = true;
     setImageLoaded(false);
 
     const img = new Image();
-    img.src = product.image;
+    img.src = imageSrc;
 
     img.onload = () => {
       if (isMounted) {
-        setCurrentImage(product.image);
+        setCurrentImage(imageSrc);
         setImageLoaded(true);
       }
     };
 
     img.onerror = () => {
       if (isMounted) {
-        setCurrentImage('/images/placeholder.jpg');
+        setCurrentImage(PRODUCT_PLACEHOLDER_IMAGE);
         setImageLoaded(true);
       }
     };
@@ -31,7 +34,7 @@ const RecommendationCard = React.memo(({ product, type = 'past', onAddToCart }) 
       img.onload = null;
       img.onerror = null;
     };
-  }, [product.image]);
+  }, [imageSrc]);
 
   return (
     <div className={`recommendation-card ${type}`}>
@@ -52,22 +55,23 @@ const RecommendationCard = React.memo(({ product, type = 'past', onAddToCart }) 
       </div>
       <div className="product-details">
         <h3 className="product-name">{product.name}</h3>
-        <p className="product-price">${product.price.toFixed(2)}</p>
+        <p className="product-price">${(Number(product.price) || 0).toFixed(2)}</p>
         <div className="product-rating">
           {Array.from({ length: 5 }).map((_, i) => (
             <span
               key={i}
-              className={i < Math.floor(product.rating) ? 'filled' : ''}
+              className={i < Math.floor(rating) ? 'filled' : ''}
             >
-              {i < Math.floor(product.rating) ? '★' : '☆'}
+              {i < Math.floor(rating) ? '\u2605' : '\u2606'}
             </span>
           ))}
-          <span className="rating-value">{product.rating.toFixed(1)}</span>
+          <span className="rating-value">{rating.toFixed(1)}</span>
         </div>
         <p className="product-category">{product.category}</p>
         <button
           className="add-button"
           onClick={() => onAddToCart && onAddToCart(product)}
+          disabled={!product.product_id}
         >
           {type === 'past' ? 'Buy Again' : 'Add to Cart'}
         </button>
