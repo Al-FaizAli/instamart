@@ -5,6 +5,7 @@ import departmentRoutes from './department.js';
 import aisleRoutes from './aisle.js';
 import authRoutes from './auth.js';
 import cartRoutes from './cart.js';
+import recommendationRoutes from './recommendation.js';
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ router.use('/api/departments', departmentRoutes);
 router.use('/api/aisles', aisleRoutes);
 router.use('/api/auth', authRoutes);
 router.use('/api/cart', cartRoutes);
+router.use('/api/recommendations', recommendationRoutes);
 
 // Health check endpoint
 router.get('/api/health', (req, res) => {

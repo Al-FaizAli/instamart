@@ -20,6 +20,20 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  image_link: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  catalog_content: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  price: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true,
 });

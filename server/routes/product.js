@@ -4,6 +4,7 @@ import {
   getProducts,
   getFeaturedProducts,
   getProductsByDepartment,
+  getProductsByNames,
   getSearchSuggestions,
   searchProducts
 } from '../controllers/product.js';
@@ -16,6 +17,7 @@ router.get('/featured', getFeaturedProducts);
 router.get('/department/:departmentId', getProductsByDepartment);
 router.get('/search/suggestions', getSearchSuggestions);
 router.get('/search', searchProducts);
+router.post('/by-names', getProductsByNames);
 // Get products by multiple IDs
 router.get('/by-ids', async (req, res) => {
   try {
