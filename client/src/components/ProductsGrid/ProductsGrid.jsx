@@ -2,7 +2,7 @@ import React from 'react';
 import './ProductsGrid.css';
 import ProductCard from '../ProductCard/ProductCard';
 
-const ProductsGrid = ({ products, isInCart, handleAdd, handleRemove, loading }) => {
+const ProductsGrid = ({ products, getCartQuantity, handleAdd, handleRemove, handleUpdateQuantity, loading }) => {
     if (loading) {
         return (
             <div className="loading-container">
@@ -19,9 +19,10 @@ const ProductsGrid = ({ products, isInCart, handleAdd, handleRemove, loading }) 
                     <ProductCard
                         key={product.product_id}
                         product={product}
-                        isInCart={isInCart}
+                        getCartQuantity={getCartQuantity}
                         handleAdd={handleAdd}
                         handleRemove={handleRemove}
+                        handleUpdateQuantity={handleUpdateQuantity}
                     />
                 ))
             ) : (

@@ -5,7 +5,7 @@ import './Recommendations.css';
 import API from '../../api';
 import { normalizeProduct, normalizeProducts } from '../../utils/productHelpers';
 
-const RecommendedProducts = ({ user, isInCart, handleAdd, handleRemove }) => {
+const RecommendedProducts = ({ user, getCartQuantity, handleAdd, handleRemove, handleUpdateQuantity }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -124,9 +124,10 @@ const RecommendedProducts = ({ user, isInCart, handleAdd, handleRemove }) => {
                 key={product.id}
                 product={product}
                 badgeText="Recommended"
-                isInCart={isInCart}
+                getCartQuantity={getCartQuantity}
                 handleAdd={handleAdd}
                 handleRemove={handleRemove}
+                handleUpdateQuantity={handleUpdateQuantity}
               />
             ))
           ) : (

@@ -3,7 +3,7 @@ import './ProductCard.css';
 import { FiShoppingCart } from 'react-icons/fi';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/productHelpers';
 
-const ProductCard = React.memo(({ product, isInCart, handleAdd, handleRemove, badgeText }) => {
+const ProductCard = React.memo(({ product, getCartQuantity, handleAdd, handleRemove, handleUpdateQuantity, badgeText }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [currentImage, setCurrentImage] = useState(PRODUCT_PLACEHOLDER_IMAGE);
   
@@ -76,13 +76,22 @@ const ProductCard = React.memo(({ product, isInCart, handleAdd, handleRemove, ba
           <span className="rating-value">{rating.toFixed(1)}</span>
         </div>
         <div className="product-actions">
-          {isInCart && isInCart(product.product_id) ? (
-            <button
-              className="remove-button"
-              onClick={() => handleRemove(product.product_id)}
-            >
-              REMOVE
-            </button>
+          {getCartQuantity && getCartQuantity(product.product_id) > 0 ? (
+            <div className="quantity-selector">
+              <button
+                className="qty-btn"
+                onClick={() => handleUpdateQuantity(product.product_id, getCartQuantity(product.product_id) - 1)}
+              >
+                -
+              </button>
+              <span className="qty-value">{getCartQuantity(product.product_id)}</span>
+              <button
+                className="qty-btn"
+                onClick={() => handleUpdateQuantity(product.product_id, getCartQuantity(product.product_id) + 1)}
+              >
+                +
+              </button>
+            </div>
           ) : (
             <button
               className="add-button"

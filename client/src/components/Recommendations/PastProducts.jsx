@@ -4,7 +4,7 @@ import './Recommendations.css';
 import API from '../../api';
 import { normalizeProducts } from '../../utils/productHelpers';
 
-const PastProducts = ({ user, isInCart, handleAdd, handleRemove }) => {
+const PastProducts = ({ user, getCartQuantity, handleAdd, handleRemove, handleUpdateQuantity }) => {
   const [pastProducts, setPastProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -96,9 +96,10 @@ const PastProducts = ({ user, isInCart, handleAdd, handleRemove }) => {
                 key={product.id}
                 product={product}
                 badgeText="Past"
-                isInCart={isInCart}
+                getCartQuantity={getCartQuantity}
                 handleAdd={handleAdd}
                 handleRemove={handleRemove}
+                handleUpdateQuantity={handleUpdateQuantity}
               />
             ))
           ) : (

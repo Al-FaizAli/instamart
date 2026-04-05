@@ -18,7 +18,7 @@ const Navbar = () => {
             <nav className="navbar">
                 <div className="logo" onClick={() => navigate('/')}>
                     <span className="blink">insta</span>
-                    <span className="it">cart</span>
+                    <span className="it">mart</span>
                 </div>
                 <div className="delivery-info">
                     <strong>Delivery in 15 minutes</strong>

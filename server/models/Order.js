@@ -10,12 +10,17 @@ const orderSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  product_id: [{
+    type: Number,
+    default: []
+  }],
   order_number: Number,
   order_dow: Number,
   order_hour_of_day: Number,
   days_since_prior_order: Number
 }, {
-  timestamps: true
+  timestamps: true,
+  versionKey: false
 });
 
 // Create index for faster queries

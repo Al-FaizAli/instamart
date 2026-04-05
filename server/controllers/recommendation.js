@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 
 const resolveCandidateUserIds = (req) => {
     const rawValues = [
@@ -35,85 +37,69 @@ export const getPastProducts = async (req, res) => {
             return res.status(400).json({ message: 'Invalid user ID' });
         }
 
-        const db = mongoose.connection.db;
-        const ordersCollection = db.collection('orders');
-        const priorCollection = db.collection('order_products__prior');
-        const trainCollection = db.collection('order_products__train');
-        const productsCollection = db.collection('products');
-
-        const matchedOrders = await ordersCollection.find(
+        // 1. Fetch user's orders, selecting only product_id array and order_number
+        const matchedOrders = await Order.find(
             { user_id: { $in: candidateUserIds } },
-            { projection: { _id: 0, order_id: 1, order_number: 1 } }
-        ).sort({ order_number: -1 }).toArray();
+            { _id: 0, order_id: 1, order_number: 1, product_id: 1 }
+        ).sort({ order_number: -1 }).lean();
 
-        if (matchedOrders.length === 0) {
+        if (!matchedOrders || matchedOrders.length === 0) {
             return res.json([]);
         }
 
-        const orderIds = matchedOrders.map((order) => order.order_id);
-
-        const [priorItems, trainItems] = await Promise.all([
-            priorCollection.find(
-                { order_id: { $in: orderIds } },
-                { projection: { _id: 0, order_id: 1, product_id: 1, reordered: 1 } }
-            ).toArray(),
-            trainCollection.find(
-                { order_id: { $in: orderIds } },
-                { projection: { _id: 0, order_id: 1, product_id: 1, reordered: 1 } }
-            ).toArray(),
-        ]);
-
-        const allItems = [...priorItems, ...trainItems];
-
-        if (allItems.length === 0) {
-            return res.json([]);
-        }
-
-        const uniqueProductIds = [...new Set(allItems.map((item) => item.product_id))];
-        const products = await productsCollection.find(
-            { product_id: { $in: uniqueProductIds } }
-        ).toArray();
-
+        // 2. Track metadata: latest order number, order frequency
         const latestOrderNumberByProductId = new Map();
-        const orderNumberByOrderId = new Map(
-            matchedOrders.map((order) => [order.order_id, order.order_number ?? 0])
-        );
         const orderCountByProductId = new Map();
-        const reorderCountByProductId = new Map();
+        const uniqueProductIds = new Set();
 
-        allItems.forEach((item) => {
-            const orderNumber = orderNumberByOrderId.get(item.order_id) ?? 0;
-            const previousLatest = latestOrderNumberByProductId.get(item.product_id) ?? -1;
+        matchedOrders.forEach((order) => {
+            const currentOrderNum = order.order_number ?? 0;
+            const productIds = order.product_id || [];
 
-            if (orderNumber > previousLatest) {
-                latestOrderNumberByProductId.set(item.product_id, orderNumber);
-            }
+            productIds.forEach((pid) => {
+                const numericPid = Number(pid);
+                if (isNaN(numericPid)) return;
 
-            orderCountByProductId.set(
-                item.product_id,
-                (orderCountByProductId.get(item.product_id) ?? 0) + 1
-            );
+                uniqueProductIds.add(numericPid);
 
-            if (item.reordered === 1) {
-                reorderCountByProductId.set(
-                    item.product_id,
-                    (reorderCountByProductId.get(item.product_id) ?? 0) + 1
+                // Track the latest order number the product appeared in
+                const previousLatest = latestOrderNumberByProductId.get(numericPid) ?? -1;
+                if (currentOrderNum > previousLatest) {
+                    latestOrderNumberByProductId.set(numericPid, currentOrderNum);
+                }
+
+                // Increment total appearance frequency
+                orderCountByProductId.set(
+                    numericPid,
+                    (orderCountByProductId.get(numericPid) ?? 0) + 1
                 );
-            }
+            });
         });
 
+        if (uniqueProductIds.size === 0) {
+            return res.json([]);
+        }
+
+        // 3. Fetch product details for all discovered IDs
+        const products = await Product.find({
+            product_id: { $in: Array.from(uniqueProductIds) }
+        }).lean();
+
+        // 4. Enrich and sort
         const enrichedProducts = products
             .map((product) => ({
                 ...product,
                 latest_order_number: latestOrderNumberByProductId.get(product.product_id) ?? 0,
                 past_order_count: orderCountByProductId.get(product.product_id) ?? 0,
-                past_reorder_count: reorderCountByProductId.get(product.product_id) ?? 0,
+                past_reorder_count: 0 // Implicitly 0 or derived if needed
             }))
             .sort((a, b) => {
+                // Priority 1: Recency (latest order number)
                 if (b.latest_order_number !== a.latest_order_number) {
                     return b.latest_order_number - a.latest_order_number;
                 }
 
+                // Priority 2: Frequency (total appearances)
                 return b.past_order_count - a.past_order_count;
             })
             .slice(0, 20);
