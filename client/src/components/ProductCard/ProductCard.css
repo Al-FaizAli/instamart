@@ -11,6 +11,26 @@
     overflow: hidden;
 }
 
+/* For cards inside horizontal scrollable containers like homepage */
+.scrollable-container .product-card {
+    min-width: 240px;
+    max-width: 240px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .scrollable-container .product-card {
+        min-width: 220px;
+        max-width: 220px;
+    }
+}
+@media (max-width: 600px) {
+    .scrollable-container .product-card {
+        min-width: 200px;
+        max-width: 200px;
+    }
+}
+
 .product-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
@@ -33,7 +53,38 @@
     max-width: 90%;
     max-height: 90%;
     object-fit: contain;
-    transition: transform var(--transition-base);
+    transition: opacity 0.3s ease, transform var(--transition-base);
+}
+
+.product-image.loading {
+    opacity: 0;
+}
+
+.product-image.loaded {
+    opacity: 1;
+}
+
+.image-skeleton {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gray-100);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.skeleton-animation {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .product-card:hover .product-image {

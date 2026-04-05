@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../api';
-import RecommendationCard from '../Recommendations/RecommendationCard';
+import ProductCard from '../ProductCard/ProductCard';
 import './PopularProducts.css';
 import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
@@ -11,7 +11,19 @@ const PopularProducts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [cart, setCart] = useState([]);
   const { user } = useAuth();
+
+  const fetchCart = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await API.get('/api/cart');
+      setCart(response.data.cart || []);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchPopularProducts = async () => {
@@ -36,9 +48,10 @@ const PopularProducts = () => {
     };
 
     fetchPopularProducts();
-  }, []);
+    fetchCart();
+  }, [user]);
 
-  const handleAddToCart = async (product) => {
+  const handleAdd = async (productId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token || !user) {
@@ -47,25 +60,39 @@ const PopularProducts = () => {
         return;
       }
 
-      await API.post(
-        '/api/cart/add',
-        {
-          product_id: product.product_id,
-          quantity: 1
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const product = products.find(p => p.product_id === productId || p._id === productId);
+      if (!product) return;
 
-      toast.success(`${product.name} added to cart!`);
-    } catch (requestError) {
-      console.error('Error adding to cart:', requestError);
-      toast.error(requestError.response?.data?.message || 'Failed to add to cart');
+      await API.post('/api/cart/add', { product_id: product.product_id, quantity: 1 }, { headers: { 'Content-Type': 'application/json' } });
+      await fetchCart();
+      toast.success(`${product.name || product.product_name} added to cart!`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add to cart');
     }
   };
+
+  const handleRemove = async (productId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !user) {
+        toast.error('Please login to modify cart');
+        setIsLoginOpen(true);
+        return;
+      }
+
+      await API.delete(`/api/cart/${productId}`);
+      await fetchCart();
+      toast.success('Item removed from cart');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to remove from cart');
+    }
+  };
+
+  const isInCart = (productId) => {
+    return cart.some(item => item.product_id === productId);
+  };
+
+
 
   return (
     <section className="popular-products-section">
@@ -82,12 +109,13 @@ const PopularProducts = () => {
         ) : (
           <div className="scrollable-container">
             {products.map((product) => (
-              <RecommendationCard
+              <ProductCard
                 key={product.product_id || product._id}
                 product={product}
-                type="our"
                 badgeText="Popular"
-                onAddToCart={handleAddToCart}
+                isInCart={isInCart}
+                handleAdd={handleAdd}
+                handleRemove={handleRemove}
               />
             ))}
           </div>
