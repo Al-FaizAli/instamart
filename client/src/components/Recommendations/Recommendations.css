@@ -216,3 +216,90 @@
 }
 
 /* Global h2 override removed — was causing issues */
+
+.login-prompt-card {
+  max-width: 800px;
+  margin: 2rem auto 4rem;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-200);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-prompt-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.login-prompt-icon-wrapper {
+  width: 70px;
+  height: 70px;
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--primary);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  transform: rotate(-5deg);
+  transition: transform 0.3s ease;
+}
+
+.login-prompt-card:hover .login-prompt-icon-wrapper {
+  transform: rotate(0deg) scale(1.1);
+}
+
+.login-prompt-card h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.login-prompt-card p {
+  color: var(--gray-500);
+  font-size: 1.05rem;
+  max-width: 480px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.login-prompt-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 14px 44px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.25);
+  margin-top: 0.5rem;
+  font-family: var(--font-body);
+}
+
+.login-prompt-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.35);
+}
+
+@media (max-width: 768px) {
+  .login-prompt-card {
+    margin: 1.5rem 1rem 3rem;
+    padding: 3rem 1.5rem;
+  }
+  
+  .login-prompt-card h2 {
+    font-size: 1.5rem;
+  }
+}
