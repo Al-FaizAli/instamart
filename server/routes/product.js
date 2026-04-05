@@ -6,7 +6,8 @@ import {
   getProductsByDepartment,
   getProductsByNames,
   getSearchSuggestions,
-  searchProducts
+  searchProducts,
+  getPopularProducts
 } from '../controllers/product.js';
 import Product from '../models/Product.js';
 
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.get('/', getProducts);
 router.get('/featured', getFeaturedProducts);
+router.get('/popular', getPopularProducts);
 router.get('/department/:departmentId', getProductsByDepartment);
 router.get('/search/suggestions', getSearchSuggestions);
 router.get('/search', searchProducts);
