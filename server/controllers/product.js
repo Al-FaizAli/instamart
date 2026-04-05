@@ -36,6 +36,20 @@ export const getFeaturedProducts = async (req, res) => {
     }
 };
 
+// @desc    Get popular products
+// @route   GET /api/products/popular
+// @access  Public
+export const getPopularProducts = async (req, res) => {
+    try {
+        const products = await Product.aggregate([
+            { $sample: { size: 12 } }
+        ]);
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get products by department
 // @route   GET /api/products/department/:departmentId
 // @access  Public
