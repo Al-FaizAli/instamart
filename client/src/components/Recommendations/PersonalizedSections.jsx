@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Recommendations.css';
 import API from '../../api';
+import { FiShoppingCart } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
 import PastProducts from './PastProducts';
@@ -95,7 +96,25 @@ const PersonalizedSections = () => {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="recommendations-container">
+        <div className="login-prompt-card">
+          <div className="login-prompt-icon-wrapper">
+             <FiShoppingCart size={32} />
+          </div>
+          <h2>Unlock Your Personalized Shop</h2>
+          <p>
+            Log in to see items you've bought before and discover new recommendations picked just for you.
+          </p>
+          <button className="login-prompt-btn" onClick={() => setIsLoginOpen(true)}>
+            Sign In to Your Account
+          </button>
+        </div>
+        {isLoginOpen && (
+          <LoginSignup onClose={() => setIsLoginOpen(false)} />
+        )}
+      </div>
+    );
   }
 
   return (
