@@ -5,6 +5,7 @@ import LoginSignup from "../LoginSignup/LoginSignup";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "../SearchBar/SearchBar";
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const Navbar = () => {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -45,7 +46,14 @@ const Navbar = () => {
                     )}
                     <button
                         className="cart-btn"
-                        onClick={() => navigate('/cart')}
+                        onClick={() => {
+                            if (!user) {
+                                toast.error('Please login to access cart');
+                                setIsLoginOpen(true);
+                            } else {
+                                navigate('/cart');
+                            }
+                        }}
                     >
                         <FaShoppingCart className="cart-icon" />
                         <span className="cart-text">My Cart</span>
@@ -80,8 +88,13 @@ const Navbar = () => {
                         <button
                             className="cart-btn"
                             onClick={() => {
-                                navigate('/cart');
                                 setIsMenuOpen(false);
+                                if (!user) {
+                                    toast.error('Please login to access cart');
+                                    setIsLoginOpen(true);
+                                } else {
+                                    navigate('/cart');
+                                }
                             }}
                         >
                             <FaShoppingCart className="cart-icon" />

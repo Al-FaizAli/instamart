@@ -8,10 +8,12 @@ import MyCart from './pages/Cart/Cart';
 import SearchResults from './pages/SearchResults/SearchResults';
 import { AuthProvider } from './context/AuthContext';
 import LoginSignup from './components/LoginSignup/LoginSignup';
+import { Toaster } from 'react-hot-toast';
 
 const App = () => {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Router>
         <div className='App'>
           <Navbar />

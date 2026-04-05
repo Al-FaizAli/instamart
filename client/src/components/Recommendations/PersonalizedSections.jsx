@@ -5,17 +5,17 @@ import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
 import PastProducts from './PastProducts';
 import RecommendedProducts from './RecommendedProducts';
+import { toast } from 'react-hot-toast';
 
 const PersonalizedSections = () => {
   const { user, loading } = useAuth();
-  const [cartMessage, setCartMessage] = useState('');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleAddToCart = async (product) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        setCartMessage('Please login to add items to cart');
+        toast.error('Please login to add items to cart');
         setIsLoginOpen(true);
         return;
       }
@@ -33,12 +33,10 @@ const PersonalizedSections = () => {
         }
       );
 
-      setCartMessage(`${product.product_name || product.name} added to cart!`);
-      setTimeout(() => setCartMessage(''), 2000);
+      toast.success(`${product.product_name || product.name} added to cart!`);
     } catch (requestError) {
       console.error('Error adding to cart:', requestError);
-      setCartMessage(requestError.response?.data?.message || 'Failed to add to cart');
-      setTimeout(() => setCartMessage(''), 2000);
+      toast.error(requestError.response?.data?.message || 'Failed to add to cart');
     }
   };
 
@@ -59,7 +57,6 @@ const PersonalizedSections = () => {
 
   return (
     <div className="recommendations-container">
-      {cartMessage && <div className="cart-message">{cartMessage}</div>}
       <PastProducts user={user} onAddToCart={handleAddToCart} />
       <RecommendedProducts user={user} onAddToCart={handleAddToCart} />
       {isLoginOpen && (

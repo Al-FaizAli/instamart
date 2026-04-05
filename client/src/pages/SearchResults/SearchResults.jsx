@@ -5,12 +5,15 @@ import './SearchResults.css';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 import API from '../../api';
 import { normalizeProducts } from '../../utils/productHelpers';
+import { toast } from 'react-hot-toast';
+import LoginSignup from '../../components/LoginSignup/LoginSignup';
 
 const SearchResults = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [cart, setCart] = useState([]);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
     const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
@@ -83,7 +86,8 @@ const SearchResults = () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Please login to add items to cart');
+                toast.error('Please login to add items to cart');
+                setIsLoginOpen(true);
                 return;
             }
 
@@ -103,10 +107,10 @@ const SearchResults = () => {
             );
 
             await fetchCart();
-            alert(`${product.product_name} added to cart!`);
+            toast.success(`${product.product_name} added to cart!`);
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert(error.response?.data?.message || 'Failed to add to cart');
+            toast.error(error.response?.data?.message || 'Failed to add to cart');
         }
     };
 
@@ -114,17 +118,18 @@ const SearchResults = () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Please login to modify cart');
+                toast.error('Please login to modify cart');
+                setIsLoginOpen(true);
                 return;
             }
 
             await API.delete(`/api/cart/${productId}`);
 
             await fetchCart();
-            alert('Item removed from cart');
+            toast.success('Item removed from cart');
         } catch (error) {
             console.error('Error removing from cart:', error);
-            alert(error.response?.data?.message || 'Failed to remove from cart');
+            toast.error(error.response?.data?.message || 'Failed to remove from cart');
         }
     };
 
@@ -186,6 +191,10 @@ const SearchResults = () => {
                         Continue Shopping
                     </button>
                 </div>
+            )}
+
+            {isLoginOpen && (
+                <LoginSignup onClose={() => setIsLoginOpen(false)} />
             )}
         </div>
     );
