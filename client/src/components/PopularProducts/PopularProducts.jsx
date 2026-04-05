@@ -92,6 +92,7 @@ const PopularProducts = () => {
                 key={product.product_id || product._id}
                 product={product}
                 type="our"
+                badgeText="Popular"
                 onAddToCart={handleAddToCart}
               />
             ))}

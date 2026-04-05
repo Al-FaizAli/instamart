@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './RecommendationCard.css';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/productHelpers';
 
-const RecommendationCard = React.memo(({ product, type = 'past', onAddToCart }) => {
+const RecommendationCard = React.memo(({ product, type = 'past', badgeText, onAddToCart }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [currentImage, setCurrentImage] = useState(PRODUCT_PLACEHOLDER_IMAGE);
   const imageSrc = product.image_link || product.image || PRODUCT_PLACEHOLDER_IMAGE;
@@ -50,7 +50,7 @@ const RecommendationCard = React.memo(({ product, type = 'past', onAddToCart }) 
           className={`product-image ${imageLoaded ? 'loaded' : 'loading'}`}
         />
         {type === 'our' && (
-          <span className="recommendation-badge">Recommended</span>
+          <span className="recommendation-badge">{badgeText || 'Recommended'}</span>
         )}
       </div>
       <div className="product-details">
