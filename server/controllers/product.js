@@ -36,14 +36,25 @@ export const getFeaturedProducts = async (req, res) => {
     }
 };
 
+let cachedPopularProducts = null;
+
 // @desc    Get popular products
 // @route   GET /api/products/popular
 // @access  Public
 export const getPopularProducts = async (req, res) => {
     try {
+        if (cachedPopularProducts && cachedPopularProducts.length > 0) {
+            return res.json(cachedPopularProducts);
+        }
+
         const products = await Product.aggregate([
             { $sample: { size: 12 } }
         ]);
+        
+        if (products && products.length > 0) {
+            cachedPopularProducts = products;
+        }
+
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });

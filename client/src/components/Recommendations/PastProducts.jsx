@@ -1,17 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import RecommendationCard from './RecommendationCard';
+import React, { useEffect, useState, useMemo } from 'react';
+import ProductCard from '../ProductCard/ProductCard';
 import './Recommendations.css';
 import API from '../../api';
 import { normalizeProducts } from '../../utils/productHelpers';
 
-const PastProducts = ({ user, onAddToCart }) => {
+const PastProducts = ({ user, isInCart, handleAdd, handleRemove }) => {
   const [pastProducts, setPastProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const cacheKey = useMemo(
+    () => (user?.userId ? `pastProducts_${user.userId}` : null),
+    [user?.userId]
+  );
+
   useEffect(() => {
+    const getCachedPastProducts = () => {
+      if (!cacheKey) return [];
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        return cached ? JSON.parse(cached) : [];
+      } catch (cacheError) {
+        console.error('Failed to read past products cache:', cacheError);
+        return [];
+      }
+    };
+
+    const setCachedPastProducts = (products) => {
+      if (!cacheKey) return;
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(products));
+      } catch (cacheError) {
+        console.error('Failed to store past products cache:', cacheError);
+      }
+    };
+
     const fetchPastProducts = async () => {
       if (!user?.userId) return;
+
+      const cachedProducts = getCachedPastProducts();
+      if (cachedProducts.length > 0) {
+        setPastProducts(cachedProducts);
+        return;
+      }
 
       setLoading(true);
       setError('');
@@ -31,17 +62,24 @@ const PastProducts = ({ user, onAddToCart }) => {
         }));
 
         setPastProducts(normalized);
+        setCachedPastProducts(normalized);
       } catch (requestError) {
         console.error('Failed to load past products:', requestError);
-        setPastProducts([]);
-        setError(requestError.response?.data?.message || 'Failed to load past products.');
+        const cachedProducts = getCachedPastProducts();
+        if (cachedProducts.length > 0) {
+          setPastProducts(cachedProducts);
+          setError('Showing cached products. Some data may be outdated.');
+        } else {
+          setPastProducts([]);
+          setError(requestError.response?.data?.message || 'Failed to load past products.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchPastProducts();
-  }, [user?.userId]);
+  }, [cacheKey, user?.userId]);
 
   if (!user) return null;
 
@@ -54,11 +92,13 @@ const PastProducts = ({ user, onAddToCart }) => {
         <div className="scrollable-container">
           {pastProducts.length > 0 ? (
             pastProducts.map((product) => (
-              <RecommendationCard
+              <ProductCard
                 key={product.id}
                 product={product}
-                type="past"
-                onAddToCart={onAddToCart}
+                badgeText="Past"
+                isInCart={isInCart}
+                handleAdd={handleAdd}
+                handleRemove={handleRemove}
               />
             ))
           ) : (

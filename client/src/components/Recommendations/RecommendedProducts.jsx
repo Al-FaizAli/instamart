@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import RecommendationCard from './RecommendationCard';
+import ProductCard from '../ProductCard/ProductCard';
 import './Recommendations.css';
 import API from '../../api';
 import { normalizeProduct, normalizeProducts } from '../../utils/productHelpers';
 
-const RecommendedProducts = ({ user, onAddToCart }) => {
+const RecommendedProducts = ({ user, isInCart, handleAdd, handleRemove }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -120,11 +120,13 @@ const RecommendedProducts = ({ user, onAddToCart }) => {
         <div className="scrollable-container">
           {products.length > 0 ? (
             products.map((product) => (
-              <RecommendationCard
+              <ProductCard
                 key={product.id}
                 product={product}
-                type="our"
-                onAddToCart={onAddToCart}
+                badgeText="Recommended"
+                isInCart={isInCart}
+                handleAdd={handleAdd}
+                handleRemove={handleRemove}
               />
             ))
           ) : (
