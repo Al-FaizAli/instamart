@@ -4,12 +4,12 @@ import RecommendationCard from '../Recommendations/RecommendationCard';
 import './PopularProducts.css';
 import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
+import { toast } from 'react-hot-toast';
 
 const PopularProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [cartMessage, setCartMessage] = useState('');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { user } = useAuth();
 
@@ -42,10 +42,8 @@ const PopularProducts = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token || !user) {
-        setCartMessage('Please login to add items to cart');
+        toast.error('Please login to add items to cart');
         setIsLoginOpen(true);
-        // Clear message after a reasonable time
-        setTimeout(() => setCartMessage(''), 3000);
         return;
       }
 
@@ -62,12 +60,10 @@ const PopularProducts = () => {
         }
       );
 
-      setCartMessage(`${product.name} added to cart!`);
-      setTimeout(() => setCartMessage(''), 2000);
+      toast.success(`${product.name} added to cart!`);
     } catch (requestError) {
       console.error('Error adding to cart:', requestError);
-      setCartMessage(requestError.response?.data?.message || 'Failed to add to cart');
-      setTimeout(() => setCartMessage(''), 2000);
+      toast.error(requestError.response?.data?.message || 'Failed to add to cart');
     }
   };
 
@@ -78,8 +74,6 @@ const PopularProducts = () => {
           <h2>Popular Selling Items</h2>
           <p>Trending products loved by everyone</p>
         </div>
-
-        {cartMessage && <div className="cart-message-global">{cartMessage}</div>}
 
         {loading ? (
           <div className="loading-message">Loading popular items...</div>

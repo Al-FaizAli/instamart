@@ -4,6 +4,8 @@ import API from '../../api';
 import ProductsGrid from '../../components/ProductsGrid/ProductsGrid';
 import './Products.css'
 import { normalizeProducts } from '../../utils/productHelpers';
+import { toast } from 'react-hot-toast';
+import LoginSignup from '../../components/LoginSignup/LoginSignup';
 
 const ProductsPage = () => {
     const { aisleId } = useParams();
@@ -11,6 +13,7 @@ const ProductsPage = () => {
     const [loading, setLoading] = useState(false);
     const [cart, setCart] = useState([]);
     const [aisleName, setAisleName] = useState('');
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
 
     const fetchAisleProducts = async () => {
         setLoading(true);
@@ -65,7 +68,8 @@ const ProductsPage = () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Please login to add items to cart');
+                toast.error('Please login to add items to cart');
+                setIsLoginOpen(true);
                 return;
             }
 
@@ -85,10 +89,10 @@ const ProductsPage = () => {
             );
 
             await fetchCart();
-            alert(`${product.product_name} added to cart!`);
+            toast.success(`${product.product_name} added to cart!`);
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert(error.response?.data?.message || 'Failed to add to cart');
+            toast.error(error.response?.data?.message || 'Failed to add to cart');
         }
     };
 
@@ -96,17 +100,18 @@ const ProductsPage = () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                alert('Please login to modify cart');
+                toast.error('Please login to modify cart');
+                setIsLoginOpen(true);
                 return;
             }
 
             await API.delete(`/api/cart/${productId}`);
 
             await fetchCart();
-            alert('Item removed from cart');
+            toast.success('Item removed from cart');
         } catch (error) {
             console.error('Error removing from cart:', error);
-            alert(error.response?.data?.message || 'Failed to remove from cart');
+            toast.error(error.response?.data?.message || 'Failed to remove from cart');
         }
     };
 
@@ -140,6 +145,10 @@ const ProductsPage = () => {
                 handleRemove={handleRemove}
                 loading={loading}
             />
+
+            {isLoginOpen && (
+                <LoginSignup onClose={() => setIsLoginOpen(false)} />
+            )}
         </div>
     );
 };
