@@ -4,9 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import './Cart.css';
 import API from '../../api';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/productHelpers';
+import ProductCard from '../../components/ProductCard/ProductCard';
 
 const MyCart = () => {
     const [cart, setCart] = useState([]);
+    const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -100,8 +102,38 @@ const MyCart = () => {
             .toFixed(2);
     };
 
+    const addSuggestionToCart = async (productId) => {
+        try {
+            const existingItem = cart.find(item => item.product_id === productId);
+            if (existingItem) {
+                await updateQuantity(productId, existingItem.quantity + 1);
+            } else {
+                await API.post('/api/cart/add', { product_id: productId, quantity: 1 });
+                await fetchCart();
+            }
+        } catch (err) {
+            console.error('Error adding suggestion to cart:', err);
+            setError(err.response?.data?.message || 'Failed to add suggestion to cart');
+        }
+    };
+
+    const fetchSuggestions = async () => {
+        try {
+            const response = await API.get('/api/products/popular');
+            setSuggestions(response.data.slice(0, 10));
+        } catch (err) {
+            console.error('Error fetching suggestions:', err);
+        }
+    };
+
+    const getCartQuantity = (productId) => {
+        const item = cart.find(i => i.product_id === productId);
+        return item ? item.quantity : 0;
+    };
+
     useEffect(() => {
         fetchCart();
+        fetchSuggestions();
     }, [user]);
 
     if (error) {
@@ -175,6 +207,28 @@ const MyCart = () => {
                                     </div>
                                 ))}
                             </div>
+
+                            {suggestions.length > 0 && (
+                                <div className="cart-suggestions">
+                                    <div className="popular-header">
+                                        <h2>Suggested for You</h2>
+                                        <p>Customers also bought these items</p>
+                                    </div>
+                                    <div className="scrollable-container">
+                                        {suggestions.map((suggestion) => (
+                                            <ProductCard
+                                                key={suggestion.product_id || suggestion._id}
+                                                product={suggestion}
+                                                badgeText="Suggested"
+                                                getCartQuantity={getCartQuantity}
+                                                handleAdd={addSuggestionToCart}
+                                                handleRemove={removeFromCart}
+                                                handleUpdateQuantity={updateQuantity}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="cart-summary">
