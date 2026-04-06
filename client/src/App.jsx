@@ -8,6 +8,7 @@ import MyCart from './pages/Cart/Cart';
 import SearchResults from './pages/SearchResults/SearchResults';
 import { AuthProvider } from './context/AuthContext';
 import LoginSignup from './components/LoginSignup/LoginSignup';
+import Checkout from './pages/Checkout/Checkout';
 import { Toaster } from 'react-hot-toast';
 
 const App = () => {
@@ -21,6 +22,7 @@ const App = () => {
             <Route path='/' element={<Home />} />
             <Route path='/login' element={<LoginSignup />} />
             <Route path='/cart' element={<MyCart />} />
+            <Route path='/checkout' element={<Checkout />} />
             <Route path='/aisle/:aisleId' element={<ProductsPage />} />
             <Route path='/search' element={<SearchResults />} />
           </Routes>
