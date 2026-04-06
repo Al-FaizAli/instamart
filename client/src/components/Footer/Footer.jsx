@@ -5,16 +5,6 @@ const Footer = () => {
     return (
         <footer className="footer">
             <div className="footer-content">
-                <div className="contributors">
-                    <h4>Contributors</h4>
-                    <ul>
-                        <li>Ameer Hamza Khan</li>
-                        <li>Sourov Debnath</li>
-                        <li>Jeet Choudhary</li>
-                        <li>Al-Faiz Ali</li>
-                    </ul>
-                </div>
-
                 <div className="social-media">
                     <h4>Follow Us</h4>
                     <div className="social-icons">
