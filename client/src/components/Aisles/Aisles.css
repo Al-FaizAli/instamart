@@ -79,14 +79,15 @@
     background: rgba(255, 255, 255, 0.3);
 }
 
-.aisle-emoji {
-    font-size: 2.8rem;
+.aisle-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     z-index: 1;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
     transition: transform var(--transition-base);
 }
 
-.aisle-card.hovered .aisle-emoji {
+.aisle-card.hovered .aisle-image {
     transform: scale(1.15);
 }
 
@@ -103,6 +104,7 @@
     color: var(--gray-700);
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -179,8 +181,9 @@
         height: 90px;
     }
 
-    .aisle-emoji {
-        font-size: 2.2rem;
+    .aisle-image {
+        width: 100%;
+        height: 100%;
     }
 }
 
@@ -194,8 +197,9 @@
         height: 80px;
     }
 
-    .aisle-emoji {
-        font-size: 2rem;
+    .aisle-image {
+        width: 100%;
+        height: 100%;
     }
 
     .aisle-name {
