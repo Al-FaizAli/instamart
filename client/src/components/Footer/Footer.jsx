@@ -24,7 +24,7 @@ const Footer = () => {
                 </div>
 
                 <div className="copyright">
-                    <p>© 2025 INSTAMART. All rights reserved.</p>
+                    <p>© 2026 INSTAMART. All rights reserved.</p>
                     <p>Made with ❤️ by the team</p>
                 </div>
             </div>
