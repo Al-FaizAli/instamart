@@ -22,7 +22,7 @@ const Navbar = () => {
                 </div>
                 <div className="delivery-info">
                     <strong>Delivery in 15 minutes</strong>
-                    <span className="location">45, College Rd, Indian Institute o...</span>
+                    <span className="location">Link Road Number 3, Near Kali Mata Mandir, Bhopal, Madhya Pradesh, India, Pin Code 462003...</span>
                 </div>
                 <div className="search-bar">
                     <SearchBar />
