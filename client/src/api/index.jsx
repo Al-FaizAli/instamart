@@ -3,7 +3,7 @@ import axios from 'axios';
 const API = axios.create({
     baseURL: process.env.NODE_ENV === 'production'
         ? 'https://instacart-backend.onrender.com'
-        : 'http://localhost:5000',
+        : 'http://localhost:5001',
 });
 
 API.interceptors.request.use(config => {
