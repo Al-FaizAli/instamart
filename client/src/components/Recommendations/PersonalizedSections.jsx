@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import LoginSignup from '../LoginSignup/LoginSignup';
 import PastProducts from './PastProducts';
 import RecommendedProducts from './RecommendedProducts';
+import BasketRAGProducts from './BasketRAGProducts';
+import BasketRecommendations from './BasketRecommendations';
 import { toast } from 'react-hot-toast';
 
 const PersonalizedSections = () => {
@@ -121,6 +123,20 @@ const PersonalizedSections = () => {
     <div className="recommendations-container">
       <PastProducts 
         user={user} 
+        getCartQuantity={getCartQuantity} 
+        handleAdd={handleAdd} 
+        handleRemove={handleRemove} 
+        handleUpdateQuantity={handleUpdateQuantity}
+      />
+      <BasketRAGProducts 
+        user={user} 
+        getCartQuantity={getCartQuantity} 
+        handleAdd={handleAdd} 
+        handleRemove={handleRemove} 
+        handleUpdateQuantity={handleUpdateQuantity}
+      />
+      <BasketRecommendations 
+        cart={cart}
         getCartQuantity={getCartQuantity} 
         handleAdd={handleAdd} 
         handleRemove={handleRemove} 

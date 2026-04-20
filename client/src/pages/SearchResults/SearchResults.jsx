@@ -16,7 +16,7 @@ const SearchResults = () => {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
+    const ML_API_URL = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000';
 
 
     const searchQuery = new URLSearchParams(location.search).get('q');
@@ -24,9 +24,10 @@ const SearchResults = () => {
     const fetchSearchResults = async () => {
         setLoading(true);
         try {
-            const searchResponse = await axios.get(
-                `${FLASK_API_URL}/search?query=${encodeURIComponent(searchQuery)}`,
-                { headers: { 'Accept': 'application/json' } }
+            const searchResponse = await axios.post(
+                `${ML_API_URL}/api/search/`,
+                { query: searchQuery, top_k: 20 },
+                { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }
             );
 
             let productData = [];

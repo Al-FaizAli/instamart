@@ -25,17 +25,18 @@ const SearchBar = () => {
     const [loadingSuggestions, setLoadingSuggestions] = useState(false);
     const searchRef = useRef(null);
     const navigate = useNavigate();
-    const FLASK_API_URL = 'https://render-search-nlp.onrender.com';
+    const ML_API_URL = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000';
 
     useEffect(() => {
         const fetchSuggestions = async () => {
             if (query.length > 2) {
                 setLoadingSuggestions(true);
                 try {
-                    // 1. First fetch from Flask API (same as search results)
-                    const searchResponse = await axios.get(
-                        `${FLASK_API_URL}/search?query=${encodeURIComponent(query)}`,
-                        { headers: { 'Accept': 'application/json' } }
+                    // 1. First fetch from FastApi ML Backend
+                    const searchResponse = await axios.post(
+                        `${ML_API_URL}/api/search/`,
+                        { query: query, top_k: 10 },
+                        { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }
                     );
 
                     // Parse response data (same logic as search results)

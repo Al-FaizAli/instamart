@@ -55,7 +55,7 @@ const BasketRAGProducts = ({ user, getCartQuantity, handleAdd, handleRemove, han
         }
 
         // 4. Fetch full product details by names 
-        const names = mlRecommendations.map(rec => rec.name);
+        const names = mlRecommendations.map(rec => rec.product_name);
         
         if (names.length === 0) {
           setRecommendations([]);
@@ -67,7 +67,7 @@ const BasketRAGProducts = ({ user, getCartQuantity, handleAdd, handleRemove, han
         
         // 5. Normalize and merge
         const normalized = normalizeProducts(productsResponse.data).map((product, index) => {
-           const mlData = mlRecommendations.find(rec => rec.name === product.product_name) || {};
+           const mlData = mlRecommendations.find(rec => rec.product_name === product.product_name) || {};
            return {
               ...product,
               id: `basketrag_${product.product_id || index}`,

@@ -5,6 +5,7 @@ import './Cart.css';
 import API from '../../api';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../utils/productHelpers';
 import ProductCard from '../../components/ProductCard/ProductCard';
+import BasketRecommendations from '../../components/Recommendations/BasketRecommendations';
 
 const MyCart = () => {
     const [cart, setCart] = useState([]);
@@ -94,6 +95,21 @@ const MyCart = () => {
         }
     };
 
+    const addToCart = async (productId) => {
+        try {
+            await API.post('/api/cart/add', { product_id: productId, quantity: 1 });
+            await fetchCart();
+        } catch (err) {
+            console.error('Error adding to cart:', err);
+            setError(err.response?.data?.message || 'Failed to add item');
+        }
+    };
+
+    const getCartQuantity = (productId) => {
+        const item = cart.find(item => item.product_id === productId);
+        return item ? item.quantity : 0;
+    };
+
     const calculateTotal = () => {
         if (!cart.length) return '0.00';
 
@@ -126,10 +142,7 @@ const MyCart = () => {
         }
     };
 
-    const getCartQuantity = (productId) => {
-        const item = cart.find(i => i.product_id === productId);
-        return item ? item.quantity : 0;
-    };
+
 
     useEffect(() => {
         fetchCart();
@@ -164,6 +177,7 @@ const MyCart = () => {
                     </button>
                 </div>
             ) : (
+                <>
                 <div className="cart-layout">
                     <div className="cart-content">
                         <div className="cart-main">
@@ -256,6 +270,14 @@ const MyCart = () => {
                         </div>
                     )}
                 </div>
+                <BasketRecommendations 
+                    cart={cart}
+                    getCartQuantity={getCartQuantity}
+                    handleAdd={addToCart}
+                    handleRemove={removeFromCart}
+                    handleUpdateQuantity={updateQuantity}
+                />
+                </>
             )}
         </div>
     );
